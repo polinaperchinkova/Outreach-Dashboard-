@@ -153,6 +153,13 @@ def update_index_html(seq_array_js, config):
         flags=re.DOTALL
     )
 
+    # 1b. Fix MTD filter — always show active sequences for current month view
+    content = re.sub(
+        r"if\(period==='mtd'\) return SEQ\.filter\(s=>new Date\(s\.created\)>=new Date\('[^']+'\)\);",
+        "if(period==='mtd') return SEQ.filter(s=>s.active);",
+        content
+    )
+
     # 2. All-time replies (two occurrences in the renderKPIs function)
     content = re.sub(r"setText\('v-rep','(\d+)'\)", f"setText('v-rep','{rep}')", content)
 
