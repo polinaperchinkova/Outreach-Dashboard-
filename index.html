@@ -354,7 +354,7 @@ document.getElementById('demos-mtd-tbody').innerHTML = DEMOS_MTD.map(renderDemoR
 // Current month (April 2026): 691 sent · 381 opens · 3 replies · 1 demo
 // ============================================================
 
-const MTD = { del:1300, opn:618, clk:0, rep:13, dem:6 };
+const MTD = { del:99, opn:63, clk:0, rep:0, dem:2 };
 
 const SEQ = [
   {name:"Retail Serbia - DWH Potential",del:6,opn:2,rep:0,bnc:1,spm:1,dem:0,clk:1,or:33.3,rr:0.0,br:14.3,sr:14.3,cr:16.7,steps:1,active:true,created:"2026-07-07",industry:"Retail",title:"Mixed"},
@@ -479,7 +479,7 @@ function renderKPIs(seqs) {
     setText('v-opn',MTD.opn.toLocaleString()); setText('s-opn',`${(MTD.opn/MTD.del*100).toFixed(1)}% open rate`); setTag('t-opn','↑ Strong','tg');
     setText('v-clk','—'); setText('s-clk','Click data pending'); setTag('t-clk','Intent signal','tn');
     setText('v-rep',String(MTD.rep)); setText('s-rep',`${(MTD.rep/MTD.del*100).toFixed(2)}% reply rate`); setTag('t-rep','↑ Growing','tg');
-    setText('v-dem',String(MTD.dem)); setText('s-dem','Current Month · April 2026'); setTag('t-dem','Pipeline','tn');
+    setText('v-dem',String(MTD.dem)); setText('s-dem','Current Month · July 2026'); setTag('t-dem','Pipeline','tn');
   } else if(period==='ytd'){
     setText('v-del',del.toLocaleString()); setText('s-del',`${seqs.length} sequences · ${act} active`); setTag('t-del','All sequences','tn');
     setText('v-opn',opn.toLocaleString()); setText('s-opn',`${pct(opn)}% open rate`); setTag('t-opn',pct(opn)>=25?'↑ Strong':'↑ Building','tg');
@@ -537,7 +537,7 @@ function renderDonut(seqs) {
   }).join('');
   const demosEl=document.getElementById('donutDemos');
   if(demosEl){
-    const d=period==='ytd'?22:period==='mtd'?6:73;
+    const d=period==='ytd'?22:period==='mtd'?2:73;
     const lbl=period==='ytd'?'Year to Date 2026':period==='mtd'?'Current Month':'All Time';
     demosEl.innerHTML=`<span style="color:#585450;">Demos booked</span> &nbsp;·&nbsp; <span style="font-weight:800;color:#90c0a8;font-size:15px;">${d}</span> <span style="color:#706c68;">${lbl}</span>`;
   }
