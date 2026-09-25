@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DataMasters — Outreach Insights</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Open Sans',sans-serif; background:#2c2c2c; color:#f0edf5; min-height:100vh; font-size:14px; }
+.header { padding:20px 32px 16px; border-bottom:1px solid #3c3c3c; display:flex; align-items:center; justify-content:space-between; background:#262626; position:sticky; top:0; z-index:100; box-shadow:0 2px 12px #00000040; }
+.header-left h1 { font-size:20px; font-weight:800; color:#ffffff; letter-spacing:-0.4px; }
+.header-left h1 .brand { color:#c0504a; }
+.header-left .sub { font-size:12px; color:#807878; margin-top:3px; font-weight:600; }
+.header-right { display:flex; align-items:center; gap:10px; }
+.badge { background:#323232; color:#a09890; font-size:12px; padding:5px 14px; border-radius:20px; font-weight:600; border:1px solid #484440; text-decoration:none; }
+.badge:hover { background:#3a2c2a; color:#c07870; border-color:#604840; }
+.badge-green { background:#2c3430; color:#7aa890; border-color:#445048; }
+.container { padding:24px 32px; }
+.section-title { font-size:13px; font-weight:800; color:#e8e4ee; text-transform:uppercase; letter-spacing:0.8px; margin:28px 0 4px; }
+.section-title:first-of-type { margin-top:6px; }
+.section-note { font-size:12.5px; color:#908888; margin-bottom:18px; line-height:1.6; max-width:920px; }
+.section-note b { color:#c8c2d0; font-weight:700; }
+
+.headline { background:linear-gradient(135deg,#333330,#2f2e2b); border:1px solid #4a4a44; border-left:4px solid #c0504a; border-radius:14px; padding:22px 26px; margin-bottom:26px; box-shadow:0 2px 8px #00000025; }
+.headline h2 { font-size:16px; font-weight:800; color:#ffffff; margin-bottom:8px; letter-spacing:-0.2px; }
+.headline p { font-size:13.5px; color:#c8c2d0; line-height:1.7; }
+.headline .big { color:#eacc98; font-weight:800; }
+
+/* single email-stage container */
+.stage-card { background:#333330; border:1px solid #444440; border-radius:14px; padding:26px; margin-bottom:26px; box-shadow:0 2px 8px #00000025; }
+.stage-card .card-title { font-size:12px; font-weight:700; color:#a09898; text-transform:uppercase; letter-spacing:0.7px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; }
+.ctag { font-size:11px; font-weight:600; padding:3px 10px; border-radius:6px; background:#2c3438; color:#a8c4d8; border:1px solid #405060; letter-spacing:0; text-transform:none; }
+.stage-kpis { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:22px; }
+.skpi { background:#2e2e2c; border:1px solid #444440; border-radius:12px; padding:16px 14px; position:relative; overflow:hidden; }
+.skpi::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#8aa8c0,#b0c8dc); }
+.skpi.best::before { background:linear-gradient(90deg,#78a888,#a0c8b0); }
+.skpi.thin::before { background:linear-gradient(90deg,#7a7470,#98908a); }
+.skpi-stage { font-size:10.5px; color:#a09898; text-transform:uppercase; letter-spacing:0.7px; font-weight:700; }
+.skpi-value { font-size:28px; font-weight:800; margin:8px 0 2px; line-height:1; letter-spacing:-1px; color:#c8dff0; }
+.skpi.best .skpi-value { color:#b0d8c0; }
+.skpi.thin .skpi-value { color:#b8b2ac; }
+.skpi-sub { font-size:11px; color:#807878; }
+.skpi-tag { display:inline-block; font-size:10px; font-weight:700; margin-top:8px; padding:2px 8px; border-radius:5px; }
+.stage-split { display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+@media(max-width:760px){ .stage-split{grid-template-columns:1fr;} }
+.subhd { font-size:11px; font-weight:700; color:#908888; text-transform:uppercase; letter-spacing:0.7px; margin-bottom:14px; }
+
+.tg { background:#2a3830; color:#90c0a8; border:1px solid #405848; }
+.tn { background:#2c3438; color:#a8c4d8; border:1px solid #405060; }
+.tw { background:#383020; color:#d0b080; border:1px solid #605030; }
+
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:26px; }
+@media(max-width:760px){ .grid2{grid-template-columns:1fr;} }
+.card { background:#333330; border:1px solid #444440; border-radius:14px; padding:24px; box-shadow:0 2px 8px #00000025; }
+.card-title { font-size:12px; font-weight:700; color:#a09898; text-transform:uppercase; letter-spacing:0.7px; margin-bottom:18px; display:flex; align-items:center; justify-content:space-between; }
+
+.bk-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #404040; }
+.bk-row:last-child { border-bottom:none; }
+.bk-label { font-size:13px; color:#e0dce8; width:130px; flex-shrink:0; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bk-label .m { display:block; font-size:11px; color:#807878; font-weight:500; margin-top:2px; }
+.bk-bar-wrap { flex:1; height:8px; background:#282828; border-radius:4px; min-width:40px; }
+.bk-bar { height:8px; border-radius:4px; background:linear-gradient(90deg,#78a888,#a0c8b0); }
+.bk-stats { display:flex; flex-direction:column; align-items:flex-end; flex-shrink:0; width:92px; }
+.bk-stat-main { font-size:13px; font-weight:800; color:#b0d8c0; }
+.bk-stat-sub { font-size:11px; color:#807878; }
+
+/* insight cards row */
+.insights-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:26px; }
+@media(max-width:900px){ .insights-row{grid-template-columns:1fr;} }
+.ins { background:#333330; border:1px solid #444440; border-radius:14px; padding:22px; box-shadow:0 2px 8px #00000025; }
+.ins-title { font-size:13px; font-weight:800; color:#f0edf5; margin-bottom:16px; }
+.ins-item { display:flex; gap:11px; margin-bottom:15px; }
+.ins-item:last-child { margin-bottom:0; }
+.ins-dot { width:7px; height:7px; border-radius:50%; margin-top:6px; flex-shrink:0; }
+.ins-body { font-size:12.5px; color:#c0bcc8; line-height:1.65; }
+.ins-body strong { color:#f0edf5; font-weight:700; }
+
+/* table */
+.table-card { background:#333330; border:1px solid #444440; border-radius:14px; overflow:hidden; margin-bottom:26px; box-shadow:0 2px 8px #00000025; }
+.ttop { padding:16px 22px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #404040; flex-wrap:wrap; gap:10px; background:#2e2e2c; }
+.ttitle { font-size:12px; font-weight:700; color:#a09898; text-transform:uppercase; letter-spacing:0.7px; }
+.tfilters { display:flex; gap:6px; flex-wrap:wrap; }
+.ftab { font-size:12px; padding:5px 14px; border-radius:7px; border:1px solid #484440; background:#323232; color:#b0a8a8; cursor:pointer; transition:all 0.15s; font-family:'Open Sans',sans-serif; font-weight:600; }
+.ftab:hover { background:#3a2c2a; color:#c07870; border-color:#604840; }
+.ftab.active { background:#c0504a; color:#ffffff; border-color:#c0504a; }
+table { width:100%; border-collapse:collapse; }
+thead tr { background:#2e2e2c; }
+th { padding:11px 14px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:#a09898; text-align:left; white-space:nowrap; border-bottom:1px solid #404040; }
+td { padding:11px 14px; font-size:13px; color:#c8c4d0; border-bottom:1px solid #2e2e2c; }
+tr:last-child td { border-bottom:none; }
+tbody tr:hover td { background:#3a3835; }
+.tdn { color:#f0edf5; font-weight:600; max-width:280px; }
+.tdn span { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pill { display:inline-flex; align-items:center; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:700; white-space:nowrap; }
+.pg { background:#2a3830; color:#90c0a8; border:1px solid #405848; }
+.pgr { background:#323232; color:#908888; border:1px solid #484440; }
+.pb { background:#2c3438; color:#a8c4d8; border:1px solid #405060; }
+.stagepill { background:#2f3a44; color:#9cc4e0; border:1px solid #3e5568; }
+.num { font-variant-numeric:tabular-nums; }
+.footer { padding:16px 32px; border-top:1px solid #3c3c3c; font-size:12px; color:#585450; text-align:center; margin-top:8px; background:#262626; }
+@media(max-width:760px){ .stage-kpis{grid-template-columns:repeat(2,1fr);} .container{padding:18px 16px;} .header{padding:16px;} }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <h1><span class="brand">Data</span>Masters — Outreach Insights</h1>
+    <div class="sub">All performance insights · email-stage, sequence, industry &amp; title</div>
+  </div>
+  <div class="header-right">
+    <div class="badge badge-green">● Apollo data</div>
+    <a class="badge" href="index.html">← Dashboard</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ============ HEADLINE ============ -->
+  <div class="headline">
+    <h2>The reply comes from the follow-up, not the opener</h2>
+    <p>Across every sequence this year, <b style="color:#f0edf5">Step 2 replies at <span class="big">0.69%</span></b> versus 0.51% for the first email — a follow-up on an already-warmed contact converts about <span class="big">35% better</span>, and bounces far less (1.4% vs 3.9%). By audience, <b style="color:#f0edf5">Head-level contacts (0.92%) and Banking &amp; Retail (~0.80%) convert best</b>, while high-volume IT&nbsp;&amp;&nbsp;Services and Financial Services generate opens but few replies. The pattern is consistent: fewer, better-targeted contacts worked through at least two touches beat high-volume single sends.</p>
+  </div>
+
+  <!-- ============ EMAIL STAGE — SINGLE CONTAINER ============ -->
+  <div class="section-title">Performance by email stage</div>
+  <div class="section-note">Real per-step numbers from Apollo, all sequences, <b>Jan–Sep 2026</b>. Reply&nbsp;% is unique replies ÷ delivered at that stage. Steps 4–5 run on too little volume to read as trends.</div>
+  <div class="stage-card">
+    <div class="card-title">Email stage funnel <span class="ctag">reply · open · click, by step</span></div>
+    <div class="stage-kpis" id="stageKpis"></div>
+    <div class="stage-split">
+      <div>
+        <div class="subhd">Reply rate by stage</div>
+        <div id="stageBars"></div>
+      </div>
+      <div>
+        <div class="subhd">Open &amp; click by stage</div>
+        <canvas id="funnelChart" height="240"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SUCCESS BY INDUSTRY / TITLE ============ -->
+  <div class="section-title">What converts best</div>
+  <div class="section-note">Reply rate by <b>industry</b> and by <b>seniority</b>, all time. Bars scale to the top reply rate in each panel; minimum 300 delivered to qualify.</div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Success by industry <span class="ctag">reply % · min 300 delivered</span></div>
+      <div id="bkIndustry"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Success by seniority <span class="ctag">reply % · min 300 delivered</span></div>
+      <div id="bkTitle"></div>
+    </div>
+  </div>
+
+  <!-- ============ INSIGHT CARDS ============ -->
+  <div class="section-title">Insights</div>
+  <div class="section-note">Read directly off the numbers above and the live sequence pull.</div>
+  <div class="insights-row">
+    <div class="ins">
+      <div class="ins-title">🏆 What's working</div>
+      <div class="ins-item"><div class="ins-dot" style="background:#4ade80"></div><div class="ins-body"><strong>Step 2 is the best-converting touch.</strong> 0.69% reply vs 0.51% at Step 1, on 3,204 delivered. Follow-ups earn the reply — keep every cell at 3+ steps.</div></div>
+      <div class="ins-item"><div class="ins-dot" style="background:#4ade80"></div><div class="ins-body"><strong>Banking &amp; Retail lead on reply.</strong> Banking 0.80% (6,857 delivered), Retail 0.81% (2,720). These verticals justify more volume, not less.</div></div>
+      <div class="ins-item"><div class="ins-dot" style="background:#4ade80"></div><div class="ins-body"><strong>Head-level contacts reply most.</strong> 0.92% at Head level (5,197 delivered) — roughly 2x C-suite (0.44%) and 3.5x VP (0.26%). Weight prospecting toward Heads of function.</div></div>
+    </div>
+    <div class="ins">
+      <div class="ins-title">⚡ Quick wins</div>
+      <div class="ins-item"><div class="ins-dot" style="background:#fbbf24"></div><div class="ins-body"><strong>Founders open low but reply high.</strong> 0.39% reply on 9,526 delivered despite weak opens — the copy lands when it reaches them. A sharper subject line could lift the whole funnel.</div></div>
+      <div class="ins-item"><div class="ins-dot" style="background:#fbbf24"></div><div class="ins-body"><strong>Single-step sequences leave replies unused.</strong> Any active cell stopping at Step 1 skips its best-converting touch. Add a follow-up to each.</div></div>
+      <div class="ins-item"><div class="ins-dot" style="background:#fbbf24"></div><div class="ins-body"><strong>NL Banks is high-volume, zero reply.</strong> 533 delivered, strong opens, 0 replies across the campaign. The CTA needs a direct reply ask, not a link.</div></div>
+    </div>
+    <div class="ins">
+      <div class="ins-title">🔭 Growth gaps</div>
+      <div class="ins-item"><div class="ins-dot" style="background:#60a5fa"></div><div class="ins-body"><strong>IT &amp; Services is volume without return.</strong> 16,317 delivered — the single biggest bucket — at just 0.31% reply. Re-point that volume toward Banking, Retail and Heads.</div></div>
+      <div class="ins-item"><div class="ins-dot" style="background:#60a5fa"></div><div class="ins-body"><strong>Financial Services underperforms.</strong> 0.28% reply on 5,808 delivered. Tighten targeting before adding more.</div></div>
+      <div class="ins-item"><div class="ins-dot" style="background:#60a5fa"></div><div class="ins-body"><strong>Reply rate sits below the 2% cold-cell target.</strong> Blended reply is ~0.6%. The lever is fit and follow-through (stage 2–3), not more first-touch volume.</div></div>
+    </div>
+  </div>
+
+  <!-- ============ LIVE SEQUENCE STAGE TRACKER ============ -->
+  <div class="section-title">Where each live sequence is now</div>
+  <div class="section-note">New sequences from the <b>last 30 days</b> plus all <b>active</b> sequences, and the email stage each is currently sending or has queued next.</div>
+  <div class="table-card">
+    <div class="ttop">
+      <div class="ttitle" id="tcount">Live sequences</div>
+      <div class="tfilters">
+        <button class="ftab active" onclick="filt('all',this)">All</button>
+        <button class="ftab" onclick="filt('new',this)">New (30d)</button>
+        <button class="ftab" onclick="filt('sending',this)">Currently sending</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th>Sequence</th><th>Status</th><th>Created</th><th>Total steps</th>
+          <th>Current stage</th><th class="num">Sent 30d</th><th class="num">Queued</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer" id="footer">DataMasters Outreach Insights · Apollo.io data · September 25, 2026</div>
+
+<script>
+// ============================================================
+// EMAIL-STAGE PERFORMANCE — real per-step aggregates from Apollo
+// All sequences, Jan–Sep 2026. Refreshed by update_dashboard.py.
+// ============================================================
+const STAGES = [
+  { stage:"Step 1", label:"Initial email",    del:5292, opn:1269, clk:447, rep:27, br:3.9 },
+  { stage:"Step 2", label:"First follow-up",  del:3204, opn:640,  clk:219, rep:22, br:1.4 },
+  { stage:"Step 3", label:"Second follow-up", del:1907, opn:182,  clk:76,  rep:12, br:1.4 },
+  { stage:"Step 4", label:"Value add",        del:363,  opn:34,   clk:18,  rep:1,  br:1.6 },
+  { stage:"Step 5", label:"Final touch",      del:65,   opn:6,    clk:1,   rep:1,  br:1.5 }
+];
+
+// ============================================================
+// SUCCESS BY INDUSTRY — all time, min 300 delivered
+// ============================================================
+const INDUSTRY = [
+  { name:"Retail",              del:2720,  rep:22 },
+  { name:"Banking",             del:6857,  rep:55 },
+  { name:"Pharmaceuticals",     del:2090,  rep:12 },
+  { name:"Outsourcing",         del:1055,  rep:8  },
+  { name:"Management consulting",del:3974, rep:16 },
+  { name:"Insurance",           del:3058,  rep:13 },
+  { name:"IT & Services",       del:16317, rep:51 },
+  { name:"Financial services",  del:5808,  rep:16 },
+  { name:"Computer software",   del:6624,  rep:16 },
+  { name:"Investment mgmt",     del:2121,  rep:5  }
+];
+
+// ============================================================
+// SUCCESS BY SENIORITY — all time, min 300 delivered
+// ============================================================
+const TITLE = [
+  { name:"Head",     del:5197, rep:48 },
+  { name:"Manager",  del:2930, rep:21 },
+  { name:"C-suite",  del:8498, rep:37 },
+  { name:"Founder",  del:9526, rep:37 },
+  { name:"Partner",  del:705,  rep:5  },
+  { name:"Director", del:5082, rep:32 },
+  { name:"VP",       del:1910, rep:5  },
+  { name:"Owner",    del:1386, rep:5  }
+];
+
+// ============================================================
+// LIVE STAGE TRACKER — new (30d) + active sequences and the
+// stage each is currently sending / has queued next.
+// ============================================================
+const SEQS = [
+  {name:"Companies List | Netherlands | Business Roles | Banks", created:"2026-08-14", totalSteps:3, cur:2, sent30:547, queued:451},
+  {name:"Insurance | Greece | Business", created:"2026-09-17", totalSteps:5, cur:1, sent30:2, queued:119},
+  {name:"Companies List | Slovenia | Banks", created:"2026-08-07", totalSteps:4, cur:2, sent30:120, queued:64},
+  {name:"Kosovo | Sales Portal Companies | Banks", created:"2026-08-19", totalSteps:4, cur:4, sent30:87, queued:3},
+  {name:"Sep 2026 | Data Stockholm Events Tier B | Engaged non-repliers", created:"2026-09-18", totalSteps:3, cur:1, sent30:65, queued:0},
+  {name:"Companies list | Business | Retail | Slovenia", created:"2026-08-07", totalSteps:5, cur:4, sent30:58, queued:14},
+  {name:"Kosovo | Sales Portal Companies | Insurance", created:"2026-08-21", totalSteps:4, cur:3, sent30:42, queued:18},
+  {name:"Sep 2026 Sweden cell - English - retail", created:"2026-09-14", totalSteps:3, cur:3, sent30:27, queued:0},
+  {name:"Tech Sequence - Kosovo", created:"2026-08-20", totalSteps:3, cur:3, sent30:27, queued:16},
+  {name:"Sep 2026 mid-tier cell - Croatian - banking", created:"2026-09-04", totalSteps:3, cur:3, sent30:26, queued:2},
+  {name:"Retail Europe - Business Users | IT Dept <1 | Test", created:"2026-08-12", totalSteps:2, cur:1, sent30:20, queued:4},
+  {name:"Sep 2026 signal cell - English SI BG AL - banking", created:"2026-09-03", totalSteps:3, cur:3, sent30:9, queued:0},
+  {name:"Companies List | Insurance | Slovenia", created:"2026-08-07", totalSteps:3, cur:3, sent30:9, queued:3},
+  {name:"Sep 2026 Norway cell - English - banking", created:"2026-09-14", totalSteps:3, cur:2, sent30:6, queued:0},
+  {name:"Sep 2026 signal cell - Croatian - banking", created:"2026-09-03", totalSteps:3, cur:3, sent30:6, queued:0},
+  {name:"Tech Sequence - Croatia", created:"2026-07-24", totalSteps:3, cur:3, sent30:6, queued:0},
+  {name:"Signal Agent | Banking", created:"2026-08-31", totalSteps:1, cur:1, sent30:4, queued:0},
+  {name:"Turva | Research Agent | Finland | Data and IT owner", created:"2026-09-03", totalSteps:3, cur:3, sent30:3, queued:0},
+  {name:"Sep 2026 signal cell -Banking - BIH/ MNE", created:"2026-09-03", totalSteps:3, cur:3, sent30:3, queued:0},
+  {name:"Sep 2026 signal cell - Serbian ekavian - banking and insurance", created:"2026-09-03", totalSteps:3, cur:3, sent30:3, queued:0},
+  {name:"Sep 2026 Finland cell - English - retail", created:"2026-09-14", totalSteps:3, cur:2, sent30:2, queued:0},
+  {name:"Sep 2026 Nordics cell - English - technical track", created:"2026-09-14", totalSteps:3, cur:1, sent30:2, queued:0},
+  {name:"Chemist4U | Research Agent | United Kingdom | Data and IT owner", created:"2026-09-03", totalSteps:3, cur:2, sent30:2, queued:0},
+  {name:"Sep 2026 Switzerland cell - English - banking", created:"2026-09-14", totalSteps:4, cur:1, sent30:1, queued:0},
+  {name:"Companies List | Business | Retail | Bosnia", created:"2026-08-04", totalSteps:4, cur:4, sent30:3, queued:2},
+  {name:"SFTW26 - US Founders & others (auto)", created:"2026-09-24", totalSteps:2, cur:1, sent30:0, queued:87},
+  {name:"SFTW26 - EU Founders & others (auto)", created:"2026-09-24", totalSteps:2, cur:1, sent30:0, queued:20},
+  {name:"SFTW26 - US Investors (auto)", created:"2026-09-24", totalSteps:2, cur:1, sent30:0, queued:16},
+  {name:"SFTW26 - EU Investors (auto)", created:"2026-09-24", totalSteps:2, cur:1, sent30:0, queued:6},
+  {name:"SF Tech Week 2026 - Investors (Filip)", created:"2026-09-23", totalSteps:4, cur:1, sent30:0, queued:30},
+  {name:"SF Tech Week 2026 - Tech leaders (Filip)", created:"2026-09-24", totalSteps:4, cur:1, sent30:0, queued:8},
+  {name:"Sep 2026 | Data Stockholm Events Tier A | Met or replied | MANUAL", created:"2026-09-18", totalSteps:3, cur:1, sent30:0, queued:101}
+];
+const STAGE_NAMES = {1:"Step 1 · Initial",2:"Step 2 · Follow-up 1",3:"Step 3 · Follow-up 2",4:"Step 4 · Value add",5:"Step 5 · Final"};
+
+const DATA_DATE = new Date("2026-09-25");
+SEQS.forEach(s=>{ s.isNew = (DATA_DATE-new Date(s.created))/(864e5) <= 30; s.sending = s.sent30>0; });
+
+function pct(n,d){ return d? (n/d*100) : 0; }
+
+// ---- stage KPIs ----
+const bestReply = Math.max(...STAGES.filter(s=>s.del>=100).map(s=>pct(s.rep,s.del)));
+document.getElementById('stageKpis').innerHTML = STAGES.map(s=>{
+  const rr=pct(s.rep,s.del);
+  const isBest=Math.abs(rr-bestReply)<1e-9 && s.del>=100;
+  const thin=s.del<100;
+  const cls=isBest?'best':thin?'thin':'';
+  const tag=isBest?'<span class="skpi-tag tg">Best converter</span>'
+          :thin?'<span class="skpi-tag tw">Low volume</span>'
+          :'<span class="skpi-tag tn">'+Math.round(pct(s.opn,s.del))+'% open</span>';
+  return `<div class="skpi ${cls}"><div class="skpi-stage">${s.stage} · ${s.label}</div>
+    <div class="skpi-value">${rr.toFixed(2)}%</div>
+    <div class="skpi-sub">${s.rep} repl · ${s.del.toLocaleString()} deliv</div>${tag}</div>`;
+}).join('');
+
+// ---- stage reply bars ----
+const maxRR=Math.max(...STAGES.map(s=>pct(s.rep,s.del)));
+document.getElementById('stageBars').innerHTML = STAGES.map(s=>{
+  const rr=pct(s.rep,s.del);
+  return `<div class="bk-row"><div class="bk-label">${s.stage}<span class="m">${s.label}</span></div>
+    <div class="bk-bar-wrap"><div class="bk-bar" style="width:${maxRR?rr/maxRR*100:0}%"></div></div>
+    <div class="bk-stats"><div class="bk-stat-main">${rr.toFixed(2)}%</div><div class="bk-stat-sub">${s.rep} / ${s.del.toLocaleString()}</div></div></div>`;
+}).join('');
+
+// ---- funnel chart ----
+new Chart(document.getElementById('funnelChart'),{
+  type:'bar',
+  data:{ labels:STAGES.map(s=>s.stage),
+    datasets:[
+      {label:'Open %', data:STAGES.map(s=>+pct(s.opn,s.del).toFixed(1)), backgroundColor:'#8aa8c0', borderRadius:4},
+      {label:'Click %', data:STAGES.map(s=>+pct(s.clk,s.del).toFixed(1)), backgroundColor:'#78a888', borderRadius:4}
+    ]},
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#c8c4d0',font:{size:11}}}},
+    scales:{ x:{ticks:{color:'#a09898',font:{size:11}},grid:{color:'#3a3a38'}},
+      y:{ticks:{color:'#a09898',font:{size:11},callback:v=>v+'%'},grid:{color:'#3a3a38'},beginAtZero:true} }}
+});
+
+// ---- industry / title bars ----
+function renderBars(el,rows){
+  rows=rows.filter(r=>r.del>=300).map(r=>({...r,rr:pct(r.rep,r.del)})).sort((a,b)=>b.rr-a.rr);
+  const mx=Math.max(...rows.map(r=>r.rr));
+  document.getElementById(el).innerHTML=rows.map(r=>`<div class="bk-row">
+    <div class="bk-label" title="${r.name}">${r.name}</div>
+    <div class="bk-bar-wrap"><div class="bk-bar" style="width:${mx?r.rr/mx*100:0}%"></div></div>
+    <div class="bk-stats"><div class="bk-stat-main">${r.rr.toFixed(2)}%</div><div class="bk-stat-sub">${r.rep} / ${r.del.toLocaleString()}</div></div></div>`).join('');
+}
+renderBars('bkIndustry',INDUSTRY);
+renderBars('bkTitle',TITLE);
+
+// ---- live sequence table ----
+let curFilt='all';
+function statusPill(s){ if(s.isNew) return '<span class="pill pb">New</span>'; if(s.sending) return '<span class="pill pg">Active</span>'; return '<span class="pill pgr">Idle</span>'; }
+function stagePill(s){ const done=s.cur>=s.totalSteps && s.queued===0; return `<span class="pill stagepill">${STAGE_NAMES[s.cur]||('Step '+s.cur)}${done?' · last':''}</span>`; }
+function render(){
+  let list=SEQS.slice();
+  if(curFilt==='new') list=list.filter(s=>s.isNew);
+  else if(curFilt==='sending') list=list.filter(s=>s.sent30>0);
+  list.sort((a,b)=>(b.sent30+b.queued)-(a.sent30+a.queued));
+  document.getElementById('tcount').textContent=`Live sequences · ${list.length}`;
+  document.getElementById('tbody').innerHTML=list.map(s=>`<tr>
+    <td class="tdn"><span title="${s.name.replace(/"/g,'&quot;')}">${s.name}</span></td>
+    <td>${statusPill(s)}</td><td>${s.created}</td><td class="num">${s.totalSteps}</td>
+    <td>${stagePill(s)}</td><td class="num">${s.sent30.toLocaleString()}</td><td class="num">${s.queued.toLocaleString()}</td>
+  </tr>`).join('') || '<tr><td colspan="7" style="padding:30px;text-align:center;color:#585450">No sequences match this filter.</td></tr>';
+}
+function filt(f,el){ curFilt=f; document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active')); el.classList.add('active'); render(); }
+render();
+</script>
+</body>
+</html>
