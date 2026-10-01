@@ -2,7 +2,8 @@ name: Update Outreach Dashboard
 
 on:
   schedule:
-    - cron: '0 9 * * 5'
+    # Every Friday at 07:00 UTC (09:00 Skopje). GitHub may delay cron a few minutes.
+    - cron: '0 7 * * 5'
   workflow_dispatch:
 
 permissions:
@@ -24,15 +25,15 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
-      - name: Run dashboard update script
+      - name: Build data.json from Apollo
         env:
           APOLLO_API_KEY: ${{ secrets.APOLLO_API_KEY }}
         run: python update_dashboard.py
 
-      - name: Commit and push updated dashboard
+      - name: Commit and push updated data
         run: |
           git config user.name "Dashboard Bot"
           git config user.email "bot@datamasters.co"
-          git add index.html
+          git add data.json index.html
           git diff --staged --quiet || git commit -m "Auto-update dashboard $(date '+%Y-%m-%d')"
           git push
