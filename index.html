@@ -4,672 +4,436 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DataMasters — Outreach Dashboard</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Open Sans',sans-serif; background:#2c2c2c; color:#f0edf5; min-height:100vh; font-size:14px; }
+  :root{
+    --bg:#0b0f1a; --panel:#131a2b; --panel2:#1a2338; --line:#243049;
+    --ink:#eef2fb; --muted:#8a96b2; --faint:#5c6683;
+    --brand:#5b8def; --brand2:#7c5cff; --good:#34d399; --warn:#fbbf24; --bad:#f87171;
+    --chip:#1e2740;
+    --r:14px; --shadow:0 2px 20px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  a{color:var(--brand);text-decoration:none}
+  .wrap{max-width:1180px;margin:0 auto;padding:24px 16px 60px}
 
-.header { padding:20px 32px 16px; border-bottom:1px solid #3c3c3c; display:flex; align-items:center; justify-content:space-between; background:#262626; position:sticky; top:0; z-index:100; box-shadow:0 2px 12px #00000040; }
-.header-left h1 { font-size:20px; font-weight:800; color:#ffffff; letter-spacing:-0.4px; }
-.header-left h1 .brand { color:#c0504a; }
-.header-left p { font-size:13px; color:#a09898; margin-top:2px; }
-.header-right { display:flex; align-items:center; gap:10px; }
-.badge { background:#323232; color:#a09890; font-size:12px; padding:5px 14px; border-radius:20px; font-weight:600; border:1px solid #484440; }
-.badge-green { background:#2c3430; color:#7aa890; border-color:#445048; }
+  /* Header */
+  header.top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,var(--brand),var(--brand2));
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;box-shadow:var(--shadow)}
+  .brand h1{font-size:18px;margin:0;letter-spacing:.2px}
+  .brand p{margin:2px 0 0;font-size:12px;color:var(--muted)}
+  .updated{font-size:12px;color:var(--faint);text-align:right}
+  .updated b{color:var(--muted);font-weight:600}
 
-.period-bar { padding:10px 32px; border-bottom:1px solid #3c3c3c; display:flex; align-items:center; gap:8px; background:#282828; }
-.period-label { font-size:11px; color:#585450; font-weight:700; text-transform:uppercase; letter-spacing:0.9px; margin-right:4px; flex-shrink:0; }
-.ptab { font-size:12px; font-weight:600; padding:6px 16px; border-radius:8px; border:1px solid #484440; background:#323232; color:#888480; cursor:pointer; transition:all 0.18s; font-family:'Open Sans',sans-serif; flex-shrink:0; }
-.ptab:hover { background:#3a2c2a; color:#c07870; border-color:#604840; }
-.ptab.active { background:#c0504a; color:#ffffff; border-color:#c0504a; box-shadow:0 2px 10px #c0504a35; }
-.period-info { margin-left:auto; font-size:12px; color:#585450; font-style:italic; white-space:nowrap; }
+  /* Tabs */
+  nav.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 22px;border-bottom:1px solid var(--line)}
+  nav.tabs button{background:none;border:none;color:var(--muted);font-size:14px;font-weight:600;
+    padding:11px 16px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.15s}
+  nav.tabs button:hover{color:var(--ink)}
+  nav.tabs button.on{color:var(--ink);border-bottom-color:var(--brand)}
 
-.container { padding:24px 32px; }
+  .page{display:none;animation:fade .25s ease}
+  .page.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 
-.kpi-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:22px; }
-.kpi { background:#333330; border:1px solid #444440; border-radius:14px; padding:22px 20px; position:relative; overflow:hidden; transition:transform 0.18s,border-color 0.18s,box-shadow 0.18s; cursor:default; box-shadow:0 2px 8px #00000025; }
-.kpi:hover { transform:translateY(-3px); border-color:#606058; box-shadow:0 8px 24px #00000035; }
-.kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; border-radius:14px 14px 0 0; }
-.kpi.blue::before   { background:linear-gradient(90deg,#8aa8c0,#b0c8dc); }
-.kpi.green::before  { background:linear-gradient(90deg,#78a888,#a0c8b0); }
-.kpi.teal::before   { background:linear-gradient(90deg,#6aa8b8,#98c8d4); }
-.kpi.yellow::before { background:linear-gradient(90deg,#b89860,#d8b880); }
-.kpi.purple::before { background:linear-gradient(90deg,#9880b8,#b8a0d0); }
-.kpi-label { font-size:11px; color:#a09898; text-transform:uppercase; letter-spacing:0.8px; font-weight:700; }
-.kpi-value { font-size:36px; font-weight:800; margin:10px 0 4px; line-height:1; letter-spacing:-1px; }
-.kpi.blue .kpi-value   { color:#c8dff0; }
-.kpi.green .kpi-value  { color:#b0d8c0; }
-.kpi.teal .kpi-value   { color:#a8d8e4; }
-.kpi.yellow .kpi-value { color:#eacc98; }
-.kpi.purple .kpi-value { color:#ccc0e8; }
-.kpi-sub { font-size:12px; color:#807878; }
-.kpi-tag { display:inline-block; font-size:11px; font-weight:700; margin-top:8px; padding:3px 10px; border-radius:6px; }
-.tg { background:#2a3830; color:#90c0a8; border:1px solid #405848; }
-.tw { background:#383020; color:#d0b080; border:1px solid #605030; }
-.tn { background:#2c3438; color:#a8c4d8; border:1px solid #405060; }
+  /* Period toggle */
+  .ptoggle{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px;margin-bottom:18px}
+  .ptoggle button{background:none;border:none;color:var(--muted);font-size:13px;font-weight:600;padding:7px 14px;border-radius:8px;cursor:pointer}
+  .ptoggle button.on{background:var(--brand);color:#fff}
 
-.charts-grid { display:grid; grid-template-columns:1.4fr 1fr; gap:16px; margin-bottom:22px; }
-.card { background:#333330; border:1px solid #444440; border-radius:14px; padding:24px; transition:border-color 0.18s,box-shadow 0.18s; box-shadow:0 2px 8px #00000025; }
-.card:hover { border-color:#606058; box-shadow:0 4px 18px #00000035; }
-.card-title { font-size:12px; font-weight:700; color:#a09898; text-transform:uppercase; letter-spacing:0.7px; margin-bottom:18px; display:flex; align-items:center; justify-content:space-between; }
-.ctag { font-size:11px; font-weight:600; padding:3px 10px; border-radius:6px; background:#2c3438; color:#a8c4d8; border:1px solid #405060; letter-spacing:0; text-transform:none; }
+  /* KPI cards */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 16px 14px;position:relative;overflow:hidden}
+  .kpi .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--faint);font-weight:700}
+  .kpi .val{font-size:28px;font-weight:800;margin:6px 0 2px;letter-spacing:-.5px}
+  .kpi .sub{font-size:12px;color:var(--muted)}
+  .kpi.accent .val{color:var(--brand)}
+  .kpi.good .val{color:var(--good)}
+  .kpi::after{content:"";position:absolute;right:-20px;top:-20px;width:70px;height:70px;border-radius:50%;background:radial-gradient(circle,rgba(91,141,239,.12),transparent 70%)}
 
-.breakdown-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:22px; }
-.bk-card { background:#333330; border:1px solid #444440; border-radius:14px; padding:22px; transition:border-color 0.18s,box-shadow 0.18s; box-shadow:0 2px 8px #00000025; }
-.bk-card:hover { border-color:#606058; box-shadow:0 4px 18px #00000035; }
-.bk-title { font-size:12px; font-weight:700; color:#a09898; text-transform:uppercase; letter-spacing:0.7px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; }
-.bk-sort { display:flex; gap:4px; }
-.bk-sort button { font-size:10px; font-weight:700; padding:2px 8px; border-radius:5px; border:1px solid #484440; background:#323232; color:#686460; cursor:pointer; font-family:'Open Sans',sans-serif; transition:all 0.15s; }
-.bk-sort button.on { background:#c0504a; color:#fff; border-color:#c0504a; }
-.bk-row { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid #404040; }
-.bk-row:last-child { border-bottom:none; }
-.bk-label { font-size:13px; color:#e0dce8; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:500; }
-.bk-bar-wrap { width:72px; height:6px; background:#282828; border-radius:3px; flex-shrink:0; }
-.bk-bar { height:6px; border-radius:3px; }
-.bk-stats { display:flex; flex-direction:column; align-items:flex-end; flex-shrink:0; width:70px; }
-.bk-stat-main { font-size:13px; font-weight:700; }
-.bk-stat-sub { font-size:11px; color:#585450; }
+  /* Panels + charts */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+  .panel h3{margin:0 0 4px;font-size:14px;font-weight:700}
+  .panel .ph-sub{font-size:12px;color:var(--muted);margin:0 0 14px}
+  .chartbox{position:relative;height:260px}
+  .chartbox.sm{height:220px}
 
-.table-card { background:#333330; border:1px solid #444440; border-radius:14px; overflow:hidden; margin-bottom:22px; box-shadow:0 2px 8px #00000025; }
-.ttop { padding:14px 22px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #404040; flex-wrap:wrap; gap:10px; background:#2e2e2c; }
-.ttitle { font-size:12px; font-weight:700; color:#a09898; text-transform:uppercase; letter-spacing:0.7px; }
-.tcontrols { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-.tfilters { display:flex; gap:6px; flex-wrap:wrap; }
-.ftab { font-size:12px; padding:5px 14px; border-radius:7px; border:1px solid #484440; background:#323232; color:#b0a8a8; cursor:pointer; transition:all 0.15s; font-family:'Open Sans',sans-serif; font-weight:600; }
-.ftab:hover { background:#3a2c2a; color:#c07870; border-color:#604840; }
-.ftab.active { background:#c0504a; color:#ffffff; border-color:#c0504a; }
-.fsel { font-size:12px; padding:5px 10px; border-radius:7px; border:1px solid #484440; background:#323232; color:#c0bcc8; font-family:'Open Sans',sans-serif; cursor:pointer; font-weight:600; }
-.fsel:focus { outline:none; border-color:#c0504a; }
-.sort-btn { font-size:11px; font-weight:700; padding:5px 10px; border-radius:7px; border:1px solid #484440; background:#323232; color:#808888; cursor:pointer; font-family:'Open Sans',sans-serif; transition:all 0.15s; }
-.sort-btn:hover { border-color:#c0504a; color:#c07870; }
-.sort-btn.on { border-color:#6aa8b8; color:#6aa8b8; background:#1e2c30; }
-table { width:100%; border-collapse:collapse; }
-thead tr { background:#2e2e2c; }
-th { padding:11px 14px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:#a09898; text-align:left; white-space:nowrap; font-family:'Open Sans',sans-serif; border-bottom:1px solid #404040; cursor:pointer; user-select:none; }
-th:hover { color:#c0bcc8; }
-th .sort-arrow { font-size:9px; margin-left:3px; opacity:0.5; }
-th.sorted { color:#a8d8e4; }
-th.sorted .sort-arrow { opacity:1; }
-td { padding:11px 14px; font-size:13px; color:#c8c4d0; border-bottom:1px solid #2e2e2c; font-family:'Open Sans',sans-serif; }
-tr:last-child td { border-bottom:none; }
-tbody tr:hover td { background:#3a3835; }
-.tdn { color:#f0edf5; font-weight:600; max-width:200px; }
-.tdn span { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.pill { display:inline-flex; align-items:center; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:700; white-space:nowrap; }
-.pg  { background:#2a3830; color:#90c0a8; border:1px solid #405848; }
-.py  { background:#383020; color:#d0b080; border:1px solid #605030; }
-.pr  { background:#382820; color:#c88878; border:1px solid #604840; }
-.pb  { background:#2c3438; color:#a8c4d8; border:1px solid #405060; }
-.pgr { background:#323232; color:#585450; border:1px solid #484440; }
+  /* Table */
+  .tablewrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line);background:var(--panel2)}
+  .filters select,.filters input{background:var(--bg);border:1px solid var(--line);color:var(--ink);
+    border-radius:9px;padding:8px 10px;font-size:13px;font-family:inherit}
+  .filters input{min-width:180px}
+  .filters .count{margin-left:auto;font-size:12px;color:var(--muted)}
+  .filters .reset{background:var(--chip);border:1px solid var(--line);color:var(--muted);border-radius:9px;padding:8px 12px;font-size:12px;cursor:pointer;font-weight:600}
+  .tscroll{overflow-x:auto;max-height:640px;overflow-y:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:860px}
+  thead th{position:sticky;top:0;background:var(--panel2);text-align:left;padding:11px 12px;font-size:11px;
+    text-transform:uppercase;letter-spacing:.5px;color:var(--faint);font-weight:700;cursor:pointer;white-space:nowrap;border-bottom:1px solid var(--line);user-select:none}
+  thead th:hover{color:var(--ink)}
+  thead th .arr{opacity:.35;font-size:10px;margin-left:3px}
+  thead th.sorted .arr{opacity:1;color:var(--brand)}
+  tbody td{padding:10px 12px;border-bottom:1px solid rgba(36,48,73,.5);white-space:nowrap}
+  tbody tr:hover{background:rgba(91,141,239,.05)}
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+  .seqname{white-space:normal;min-width:240px;font-weight:600}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700}
+  .pill.active{background:rgba(52,211,153,.15);color:var(--good)}
+  .pill.paused{background:rgba(138,150,178,.15);color:var(--muted)}
+  .pill.region{background:var(--chip);color:#a9b7da}
+  .pill.ind{background:rgba(124,92,255,.14);color:#b3a0ff}
+  /* step progress */
+  .prog{display:flex;align-items:center;gap:8px;min-width:150px}
+  .progbar{flex:1;height:7px;background:var(--bg);border-radius:4px;overflow:hidden;border:1px solid var(--line)}
+  .progfill{height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2));border-radius:4px}
+  .progtxt{font-size:11px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
+  .dot.running{background:var(--good)}.dot.completed{background:var(--brand)}
+  .dot.paused{background:var(--muted)}.dot.not_started{background:var(--warn)}
 
-.insights-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
-.ins { background:#333330; border:1px solid #444440; border-radius:14px; padding:24px; transition:border-color 0.18s,box-shadow 0.18s; box-shadow:0 2px 8px #00000025; }
-.ins:hover { border-color:#606058; box-shadow:0 4px 18px #00000035; }
-.ins-title { font-size:12px; font-weight:700; color:#a09898; text-transform:uppercase; letter-spacing:0.7px; margin-bottom:16px; }
-.ins-item { display:flex; gap:10px; margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid #404040; }
-.ins-item:last-child { border-bottom:none; margin-bottom:0; padding-bottom:0; }
-.ins-dot { width:7px; height:7px; border-radius:50%; margin-top:5px; flex-shrink:0; }
-.ins-body { font-size:13px; color:#c0bcc8; line-height:1.7; }
-.ins-body strong { color:#f0edf5; font-weight:700; }
-.nodata { padding:40px; text-align:center; color:#585450; font-size:14px; }
-.footer { padding:16px 32px; border-top:1px solid #3c3c3c; font-size:12px; color:#484440; text-align:center; margin-top:24px; background:#262626; }
+  /* step page */
+  .steprow{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid rgba(36,48,73,.6)}
+  .steprow:last-child{border-bottom:none}
+  .stepnum{width:40px;height:40px;border-radius:11px;background:var(--chip);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--brand);flex-shrink:0}
+  .stepmeta{flex:1;min-width:0}
+  .stepmeta .n{font-weight:700;font-size:14px}
+  .stepmeta .d{font-size:12px;color:var(--muted)}
+  .stepbars{display:flex;gap:18px;flex-shrink:0;text-align:right}
+  .stepbars .sb{min-width:66px}
+  .stepbars .sb .v{font-size:17px;font-weight:800}
+  .stepbars .sb .k{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);font-weight:700}
+
+  /* insight cards */
+  .insight{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:16px}
+  .insight h3{margin:0 0 2px;font-size:14px}
+  .insight .ih{font-size:12px;color:var(--muted);margin:0 0 14px}
+  .ilist{display:flex;flex-direction:column;gap:9px}
+  .irow{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--panel2);border-radius:10px;border:1px solid var(--line)}
+  .irow .rank{width:22px;height:22px;border-radius:7px;background:var(--chip);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--muted);flex-shrink:0}
+  .irow .rank.top{background:var(--brand);color:#fff}
+  .irow .main{flex:1;min-width:0}
+  .irow .main .t{font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis}
+  .irow .main .s{font-size:11px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .irow .metric{text-align:right;flex-shrink:0}
+  .irow .metric .mv{font-weight:800;font-size:15px}
+  .irow .metric .mk{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.4px}
+  .irow .metric.good .mv{color:var(--good)}
+  .badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:var(--chip);color:var(--muted);margin-left:6px}
+
+  .note{font-size:12px;color:var(--faint);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 13px;margin-bottom:16px;display:flex;gap:8px}
+  .note b{color:var(--muted)}
+  .sechead{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--faint);font-weight:800;margin:26px 0 12px}
+  footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--faint);text-align:center}
+  .loading{text-align:center;padding:80px 20px;color:var(--muted)}
+  .spin{width:30px;height:30px;border:3px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:sp 1s linear infinite;margin:0 auto 14px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  @media(max-width:860px){.grid2,.grid3{grid-template-columns:1fr}}
+  @media(max-width:560px){.kpi .val{font-size:23px}.filters input{min-width:130px;flex:1}}
 </style>
 </head>
 <body>
-
-<div class="header">
-  <div class="header-left">
-    <h1><span class="brand">Data</span>Masters — Outreach Intelligence</h1>
-    <p>Apollo.io live data · September 25, 2026</p>
-  </div>
-  <div class="header-right">
-    <div class="badge badge-green">● Live Data</div>
-    <div class="badge">127 Sequences</div>
-  </div>
-</div>
-
-<div class="period-bar">
-  <span class="period-label">Period</span>
-  <button class="ptab active" onclick="setPeriod('all',this)">All Time</button>
-  <button class="ptab" onclick="setPeriod('ytd',this)">Year to Date 2026</button>
-  <button class="ptab" onclick="setPeriod('mtd',this)">Current Month · September 2026</button>
-  <span class="period-info" id="periodInfo">All 127 sequences</span>
-</div>
-
-<div class="container">
-
-  <div class="kpi-grid">
-    <div class="kpi blue">  <div class="kpi-label">Emails Delivered</div><div class="kpi-value" id="v-del">—</div><div class="kpi-sub" id="s-del">—</div><span class="kpi-tag tn" id="t-del">—</span></div>
-    <div class="kpi green"> <div class="kpi-label">Unique Opens</div>   <div class="kpi-value" id="v-opn">—</div><div class="kpi-sub" id="s-opn">—</div><span class="kpi-tag"   id="t-opn">—</span></div>
-    <div class="kpi teal">  <div class="kpi-label">Total Clicks</div>   <div class="kpi-value" id="v-clk">—</div><div class="kpi-sub" id="s-clk">—</div><span class="kpi-tag tn" id="t-clk">—</span></div>
-    <div class="kpi yellow"><div class="kpi-label">Replies</div>         <div class="kpi-value" id="v-rep">—</div><div class="kpi-sub" id="s-rep">—</div><span class="kpi-tag"   id="t-rep">—</span></div>
-    <div class="kpi purple"><div class="kpi-label">Demos Booked</div>   <div class="kpi-value" id="v-dem">—</div><div class="kpi-sub" id="s-dem">—</div><span class="kpi-tag tn" id="t-dem">—</span></div>
-  </div>
-
-  <div class="charts-grid">
-    <div class="card">
-      <div class="card-title">Sequences by Region <span class="ctag" id="chartTag">All Time</span></div>
-      <canvas id="barChart" height="130"></canvas>
-    </div>
-    <div class="card">
-      <div class="card-title">Sequences by Industry <span class="ctag" id="donutTag">All Time</span></div>
-      <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
-        <canvas id="donutChart" width="260" height="260" style="display:block"></canvas>
-        <div id="donutLegend" style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;width:100%;"></div>
-        <div id="donutDemos" style="width:100%;padding:10px 14px;background:#2a3830;border-radius:10px;border:1px solid #405848;text-align:center;font-size:12px;color:#90c0a8;"></div>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="logo">DM</div>
+      <div>
+        <h1>Outreach Dashboard</h1>
+        <p>DataMasters · Apollo.io live data</p>
       </div>
     </div>
-  </div>
+    <div class="updated">Last updated<br><b id="updated">—</b></div>
+  </header>
 
-  <div class="breakdown-grid">
-    <div class="bk-card">
-      <div class="bk-title">By Region <div class="bk-sort"><button id="bk-region-cnt" class="on" onclick="sortBk('region','count',this)">Count</button><button id="bk-region-act" onclick="sortBk('region','active',this)">Active</button></div></div>
-      <div id="bk-region"></div>
-    </div>
-    <div class="bk-card">
-      <div class="bk-title">By Industry <div class="bk-sort"><button id="bk-industry-cnt" class="on" onclick="sortBk('industry','count',this)">Count</button><button id="bk-industry-act" onclick="sortBk('industry','active',this)">Active</button></div></div>
-      <div id="bk-industry"></div>
-    </div>
-    <div class="bk-card">
-      <div class="bk-title">Recent Sequences <span class="ctag">last 30 days</span></div>
-      <div id="bk-recent"></div>
-    </div>
-    <div class="bk-card">
-      <div class="bk-title">Activity Trend <span class="ctag">by month</span></div>
-      <div id="bk-trend"></div>
-    </div>
-  </div>
+  <nav class="tabs" id="tabs">
+    <button data-tab="overview" class="on">Overview</button>
+    <button data-tab="sequences">Sequences</button>
+    <button data-tab="steps">Email Steps</button>
+    <button data-tab="insights">Insights</button>
+  </nav>
 
-  <div class="table-card">
-    <div class="ttop">
-      <div class="ttitle" id="ttitle">All Sequences</div>
-      <div class="tcontrols">
-        <select class="fsel" id="f-region" onchange="applyFilters()"><option value="">All Regions</option></select>
-        <select class="fsel" id="f-industry" onchange="applyFilters()"><option value="">All Industries</option></select>
-        <select class="fsel" id="f-status" onchange="applyFilters()">
-          <option value="">All Status</option>
-          <option value="active">Active</option>
-          <option value="paused">Paused</option>
-        </select>
-      </div>
-    </div>
-    <div style="overflow-x:auto">
-      <table>
-        <thead><tr>
-          <th onclick="sortByCol('name')">Sequence<span class="sort-arrow" id="arr-name">⇅</span></th>
-          <th onclick="sortByCol('region')">Region<span class="sort-arrow" id="arr-region">⇅</span></th>
-          <th onclick="sortByCol('industry')">Industry<span class="sort-arrow" id="arr-industry">⇅</span></th>
-          <th onclick="sortByCol('created')">Created<span class="sort-arrow" id="arr-created">⇅</span></th>
-          <th onclick="sortByCol('steps')">Steps<span class="sort-arrow" id="arr-steps">⇅</span></th>
-          <th onclick="sortByCol('contacts')">Contacts<span class="sort-arrow" id="arr-contacts">⇅</span></th>
-          <th>Status</th>
-        </tr></thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="insights-row">
-    <div class="ins">
-      <div class="ins-title">🏆 What's Working</div>
-      <div class="ins-item"><div class="ins-dot" style="background:#4ade80"></div><div class="ins-body"><strong>Banking is the strongest vertical.</strong> 34 sequences targeting banks across SEE, Nordics, DACH, and Benelux. Bosnia and Montenegro Banking were the benchmark sequences for reply rate and demos.</div></div>
-      <div class="ins-item"><div class="ins-dot" style="background:#4ade80"></div><div class="ins-body"><strong>Intent signal sequences active.</strong> Website Visitors (Banking, Retail, Basic) and Banking Intent Signals are running — these contacts show the highest conversion intent and should be prioritised.</div></div>
-      <div class="ins-item"><div class="ins-dot" style="background:#4ade80"></div><div class="ins-body"><strong>Slovenia banking just launched.</strong> 8 Slovenia sequences now in portfolio — highest ACV target. NLB, SKB, Addiko, Gorenjska all in scope. Monitor opens this month.</div></div>
-    </div>
-    <div class="ins">
-      <div class="ins-title">⚡ Quick Wins</div>
-      <div class="ins-item"><div class="ins-dot" style="background:#fbbf24"></div><div class="ins-body"><strong>67 sequences active this month.</strong> September 2026: 888 delivered, 125 opens (14.1%), 52 clicks. Focus on sequences with opens and no replies — swap link CTA for direct reply ask.</div></div>
-      <div class="ins-item"><div class="ins-dot" style="background:#fbbf24"></div><div class="ins-body"><strong>SF Tech Week 2026 sequences just added.</strong> EU and US Founders + Investors — 4 new sequences from the event. Follow up within 48h while event is fresh.</div></div>
-      <div class="ins-item"><div class="ins-dot" style="background:#fbbf24"></div><div class="ins-body"><strong>Data Stockholm Events — Engaged non-repliers.</strong> Tier B re-engagement running. These contacts already showed interest; a personalised follow-up referencing their engagement can unlock replies.</div></div>
-    </div>
-    <div class="ins">
-      <div class="ins-title">🔭 Growth Gaps</div>
-      <div class="ins-item"><div class="ins-dot" style="background:#60a5fa"></div><div class="ins-body"><strong>Kosovo, Moldova, Greece underrepresented.</strong> 1–5 sequences each. These markets have financial institutions that fit the ICP — consider a dedicated banking or insurance sequence per country.</div></div>
-      <div class="ins-item"><div class="ins-dot" style="background:#60a5fa"></div><div class="ins-body"><strong>Only 1 reply tracked in September Apollo data.</strong> Replies coming in outside Apollo (LinkedIn, direct email) are not counted. Update config.json weekly to keep the demo tracker accurate.</div></div>
-      <div class="ins-item"><div class="ins-dot" style="background:#60a5fa"></div><div class="ins-body"><strong>Retail has 26 sequences but low demos historically.</strong> Customer 360 and segmentation messaging is sharper now — test the new retail template against existing contacts who opened but never replied.</div></div>
-    </div>
-  </div>
-
+  <div id="root"><div class="loading"><div class="spin"></div>Loading Apollo data…</div></div>
 </div>
-
-<div class="footer">DataMasters Customer Intelligence Platform · datamasters.co · Apollo.io live data · September 25, 2026</div>
 
 <script>
-// ============================================================
-// APOLLO DATA — pulled 2026-09-25
-// September MTD: 888 sent · 125 opened · 52 clicked · 1 replied · 16 bounced
-// Total sequences: 127 (67 active · 60 paused)
-// Manual: demos_alltime=75, demos_ytd=24, demos_mtd=4, replies_alltime=241
-// ============================================================
+let DATA=null, period='ytd';
+let fRegion='', fIndustry='', fStatus='', fSearch='';
+let sortCol='del', sortAsc=false;
 
-const MTD = { del:888, opn:125, clk:52, rep:1, dem:4, bnc:16 };
-const TOTALS = {
-  demos_alltime: 75,
-  demos_ytd: 24,
-  demos_mtd: 4,
-  replies_alltime: 241,
-  replies_ytd: 241  // update when known
-};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const n=v=>(v==null?0:v).toLocaleString();
+const pct=(a,b)=>b>0?((a/b*100).toFixed(1)+'%'):'—';
 
-const SEQ = [
-  {name:"SFTW26 - EU Founders &amp; others (auto)",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:2,active:false,created:"2026-09-24",industry:"Other",title:"Founders"},
-  {name:"SFTW26 - EU Investors (auto)",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:2,active:false,created:"2026-09-24",industry:"Other",title:"Mixed"},
-  {name:"SFTW26 - US Founders &amp; others (auto)",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:2,active:false,created:"2026-09-24",industry:"Other",title:"Founders"},
-  {name:"SFTW26 - US Investors (auto)",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:2,active:false,created:"2026-09-24",industry:"Other",title:"Mixed"},
-  {name:"SF Tech Week 2026 - Tech leaders (Filip)",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:4,active:false,created:"2026-09-24",industry:"Other",title:"Mixed"},
-  {name:"SF Tech Week 2026 - Investors (Filip)",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:4,active:false,created:"2026-09-23",industry:"Other",title:"Mixed"},
-  {name:"Oct 2026 | Events Tier C | Attendee import | PARKED, secondary domain",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:3,active:false,created:"2026-09-18",industry:"Other",title:"Mixed"},
-  {name:"Sep 2026 | Data Stockholm Events Tier B | Engaged non-repliers",del:62,opn:5,rep:0,bnc:3,spm:0,dem:0,clk:0,or:8.1,rr:0.0,br:4.6,sr:0.0,cr:0.0,steps:3,active:true,created:"2026-09-18",industry:"Other",title:"Mixed"},
-  {name:"Sep 2026 | Data Stockholm Events Tier A | Met or replied | MANUAL",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:3,active:true,created:"2026-09-18",industry:"Other",title:"Mixed"},
-  {name:"Insurance | Greece | Business",del:6,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:5,active:true,created:"2026-09-17",industry:"Insurance",title:"Mixed"},
-  {name:"Sep 2026 Switzerland cell - English - banking",del:1,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:4,active:true,created:"2026-09-14",industry:"Banking",title:"Mixed"},
-  {name:"Sep 2026 Finland cell - English - retail",del:1,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:3,active:true,created:"2026-09-14",industry:"Retail",title:"Mixed"},
-  {name:"Sep 2026 Nordics cell - English - technical track",del:1,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:3,active:true,created:"2026-09-14",industry:"Other",title:"Mixed"},
-  {name:"Sep 2026 Norway cell - English - banking",del:3,opn:1,rep:0,bnc:0,spm:0,dem:0,clk:1,or:33.3,rr:0.0,br:0.0,sr:0.0,cr:33.3,steps:3,active:true,created:"2026-09-14",industry:"Banking",title:"Mixed"},
-  {name:"Sep 2026 Sweden cell - English - retail",del:9,opn:5,rep:0,bnc:0,spm:0,dem:0,clk:5,or:55.6,rr:0.0,br:0.0,sr:0.0,cr:55.6,steps:3,active:true,created:"2026-09-14",industry:"Retail",title:"Mixed"},
-  {name:"Monex Europe | Research Agent | UK | Data and Digital",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:3,active:false,created:"2026-09-07",industry:"Other",title:"Mixed"},
-  {name:"ANNA Money | Research Agent | UK | Data and Product",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:3,active:false,created:"2026-09-07",industry:"Other",title:"Mixed"},
-  {name:"Sep 2026 mid-tier cell - English - banking",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:3,active:false,created:"2026-09-04",industry:"Banking",title:"Mixed"},
-  {name:"Sep 2026 mid-tier cell - Croatian - banking",del:13,opn:7,rep:0,bnc:0,spm:0,dem:0,clk:7,or:53.8,rr:0.0,br:0.0,sr:0.0,cr:53.8,steps:3,active:true,created:"2026-09-04",industry:"Banking",title:"Mixed"},
-  {name:"Coop Pank | Research Agent | Estonia | Retail Banking owner",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:2,active:false,created:"2026-09-03",industry:"Banking",title:"C-Suite"},
-  {name:"Chemist4U | Research Agent | United Kingdom | Data and IT owner",del:0,opn:0,rep:0,bnc:1,spm:1,dem:0,clk:0,or:0.0,rr:0.0,br:100.0,sr:100.0,cr:0.0,steps:3,active:true,created:"2026-09-03",industry:"Other",title:"IT / Tech"},
-  {name:"Turva | Research Agent | Finland | Data and IT owner",del:1,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:3,active:true,created:"2026-09-03",industry:"Other",title:"IT / Tech"},
-  {name:"Sep 2026 signal cell - English SI BG AL - banking",del:3,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:3,active:true,created:"2026-09-03",industry:"Banking",title:"Mixed"},
-  {name:"Sep 2026 signal cell -Banking - BIH/ MNE",del:1,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:3,active:true,created:"2026-09-03",industry:"Banking",title:"Mixed"},
-  {name:"Sep 2026 signal cell - Serbian ekavian - banking and insurance",del:1,opn:1,rep:0,bnc:0,spm:0,dem:0,clk:1,or:100.0,rr:0.0,br:0.0,sr:0.0,cr:100.0,steps:3,active:true,created:"2026-09-03",industry:"Banking",title:"Mixed"},
-  {name:"Sep 2026 signal cell - Croatian - banking",del:2,opn:1,rep:0,bnc:0,spm:0,dem:0,clk:0,or:50.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:3,active:true,created:"2026-09-03",industry:"Banking",title:"Mixed"},
-  {name:"Signal Agent | Banking",del:4,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:1,active:true,created:"2026-08-31",industry:"Banking",title:"Mixed"},
-  {name:"Kosovo | Sales Portal Companies | Retail",del:9,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:2,active:true,created:"2026-08-24",industry:"Banking",title:"Mixed"},
-  {name:"Kosovo | Sales Portal Companies | Insurance",del:27,opn:9,rep:0,bnc:2,spm:0,dem:1,clk:3,or:33.3,rr:0.0,br:6.9,sr:0.0,cr:11.1,steps:4,active:true,created:"2026-08-21",industry:"Banking",title:"Mixed"},
-  {name:"Tech Sequence - Kosovo",del:27,opn:7,rep:0,bnc:1,spm:0,dem:0,clk:1,or:25.9,rr:0.0,br:3.6,sr:0.0,cr:3.7,steps:3,active:true,created:"2026-08-20",industry:"Banking",title:"Mixed"},
-  {name:"Kosovo | Sales Portal Companies | Banks",del:34,opn:0,rep:0,bnc:3,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:8.1,sr:0.0,cr:0.0,steps:4,active:true,created:"2026-08-19",industry:"Banking",title:"Mixed"},
-  {name:"NL Banks — C-Suite & Risk/Cards Leaders",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:6,active:false,created:"2026-08-18",industry:"Banking",title:"C-Suite"},
-  {name:"NL Banking - Business Roles (COO, Ops, Board, Cards)",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:3,active:false,created:"2026-08-18",industry:"Banking",title:"C-Suite"},
-  {name:"Companies List | Netherlands | Business Roles | Banks",del:445,opn:145,rep:0,bnc:22,spm:3,dem:0,clk:72,or:32.6,rr:0.0,br:4.7,sr:0.6,cr:16.2,steps:3,active:true,created:"2026-08-14",industry:"Banking",title:"Mixed"},
-  {name:"Retail Europe - Business Users | IT Dept <1 | Test",del:83,opn:7,rep:0,bnc:4,spm:4,dem:0,clk:0,or:8.4,rr:0.0,br:4.6,sr:4.6,cr:0.0,steps:2,active:true,created:"2026-08-12",industry:"Retail",title:"IT / Tech"},
-  {name:"Tech Sequence- Slovenia",del:6,opn:2,rep:0,bnc:1,spm:1,dem:0,clk:1,or:33.3,rr:0.0,br:14.3,sr:14.3,cr:16.7,steps:3,active:true,created:"2026-08-11",industry:"Banking",title:"Mixed"},
-  {name:"Tehnomarket | 10.08",del:2,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:1,active:true,created:"2026-08-10",industry:"Other",title:"Mixed"},
-  {name:"Companies list | Business | Retail | Slovenia",del:35,opn:21,rep:1,bnc:5,spm:5,dem:0,clk:9,or:60.0,rr:2.9,br:12.5,sr:12.5,cr:25.7,steps:5,active:true,created:"2026-08-07",industry:"Banking",title:"Mixed"},
-  {name:"Companies List | Slovenia | Banks",del:92,opn:34,rep:0,bnc:1,spm:0,dem:0,clk:19,or:37.0,rr:0.0,br:1.1,sr:0.0,cr:20.7,steps:4,active:true,created:"2026-08-07",industry:"Banking",title:"Mixed"},
-  {name:"Slovenia Banks — 30-Day Analytics Challenge",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:3,active:false,created:"2026-08-07",industry:"Banking",title:"Data / Analytics"},
-  {name:"Companies list | Business | Retail | Slovenia",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:0,active:false,created:"2026-08-05",industry:"Banking",title:"Mixed"},
-  {name:"Companies List | Insurance | Slovenia",del:58,opn:26,rep:0,bnc:0,spm:0,dem:0,clk:14,or:44.8,rr:0.0,br:0.0,sr:0.0,cr:24.1,steps:3,active:true,created:"2026-08-05",industry:"Banking",title:"Mixed"},
-  {name:"Companies list | Business | Retail | Bosnia",del:13,opn:8,rep:0,bnc:3,spm:3,dem:0,clk:2,or:61.5,rr:0.0,br:18.8,sr:18.8,cr:15.4,steps:4,active:true,created:"2026-07-28",industry:"Banking",title:"Mixed"},
-  {name:"Companies list | Business | Insurance | Bosnia",del:15,opn:7,rep:0,bnc:0,spm:0,dem:0,clk:1,or:46.7,rr:0.0,br:0.0,sr:0.0,cr:6.7,steps:3,active:true,created:"2026-07-28",industry:"Banking",title:"Mixed"},
-  {name:"Companies list | Business | Insurance | Croatia",del:23,opn:12,rep:3,bnc:0,spm:0,dem:0,clk:0,or:52.2,rr:13.0,br:0.0,sr:0.0,cr:0.0,steps:3,active:true,created:"2026-07-27",industry:"Banking",title:"Mixed"},
-  {name:"Tech Sequence - Croatia",del:37,opn:20,rep:1,bnc:0,spm:0,dem:0,clk:11,or:54.1,rr:2.7,br:0.0,sr:0.0,cr:29.7,steps:3,active:true,created:"2026-07-27",industry:"Banking",title:"Mixed"},
-  {name:"Companies List | Business | Banking Bosnia",del:23,opn:7,rep:2,bnc:0,spm:0,dem:2,clk:2,or:30.4,rr:8.7,br:0.0,sr:0.0,cr:8.7,steps:3,active:true,created:"2026-07-27",industry:"Banking",title:"Mixed"},
-  {name:"Companies list | Business | Insurance | Montenegro",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:3,active:false,created:"2026-07-27",industry:"Insurance",title:"Mixed"},
-  {name:"Tech Sequence - Serbia",del:14,opn:9,rep:1,bnc:2,spm:2,dem:0,clk:0,or:64.3,rr:7.1,br:12.5,sr:12.5,cr:0.0,steps:3,active:true,created:"2026-07-24",industry:"Other",title:"Mixed"},
-  {name:"Tropic Maloprodaja | 07.2026",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:4,active:false,created:"2026-07-23",industry:"Other",title:"Mixed"},
-  {name:"Companies list | Business | Insurance | Serbia",del:38,opn:13,rep:0,bnc:5,spm:4,dem:0,clk:1,or:34.2,rr:0.0,br:11.6,sr:9.3,cr:2.6,steps:3,active:true,created:"2026-07-16",industry:"Insurance",title:"Mixed"},
-  {name:"Companies List | Business | Banking Serbia",del:87,opn:40,rep:3,bnc:6,spm:2,dem:0,clk:30,or:46.0,rr:3.4,br:6.5,sr:2.2,cr:34.5,steps:3,active:true,created:"2026-07-15",industry:"Banking",title:"Mixed"},
-  {name:"Retail Serbia - DWH Potential",del:24,opn:16,rep:3,bnc:2,spm:2,dem:1,clk:9,or:66.7,rr:12.5,br:7.7,sr:7.7,cr:37.5,steps:4,active:true,created:"2026-07-07",industry:"Retail",title:"Mixed"},
-  {name:"Partnership Follow up",del:4,opn:2,rep:0,bnc:0,spm:0,dem:0,clk:0,or:50.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:1,active:true,created:"2026-07-06",industry:"Partnership",title:"Mixed"},
-  {name:"Events Follow up | Leads | EN",del:56,opn:3,rep:0,bnc:1,spm:0,dem:0,clk:3,or:5.4,rr:0.0,br:1.8,sr:0.0,cr:5.4,steps:1,active:true,created:"2026-07-06",industry:"Other",title:"Mixed"},
-  {name:"Spar MK",del:1,opn:2,rep:1,bnc:2,spm:0,dem:1,clk:1,or:100.0,rr:100.0,br:66.7,sr:0.0,cr:100.0,steps:3,active:false,created:"2026-07-06",industry:"Other",title:"Mixed"},
-  {name:"Anhoch | MK ",del:1,opn:1,rep:1,bnc:1,spm:0,dem:0,clk:0,or:100.0,rr:100.0,br:50.0,sr:0.0,cr:0.0,steps:1,active:true,created:"2026-07-06",industry:"Other",title:"Mixed"},
-  {name:"DACH | Insurance",del:23,opn:7,rep:0,bnc:0,spm:0,dem:0,clk:3,or:30.4,rr:0.0,br:0.0,sr:0.0,cr:13.0,steps:2,active:true,created:"2026-06-11",industry:"Insurance",title:"Mixed"},
-  {name:"Moldova | Banks",del:19,opn:5,rep:0,bnc:0,spm:0,dem:0,clk:4,or:26.3,rr:0.0,br:0.0,sr:0.0,cr:21.1,steps:4,active:true,created:"2026-06-10",industry:"Banking",title:"Mixed"},
-  {name:"Romania | Banks",del:35,opn:18,rep:0,bnc:2,spm:1,dem:0,clk:16,or:51.4,rr:0.0,br:5.4,sr:2.7,cr:45.7,steps:4,active:true,created:"2026-06-09",industry:"Banking",title:"Mixed"},
-  {name:"Insurance | Croatia",del:21,opn:14,rep:2,bnc:1,spm:1,dem:2,clk:5,or:66.7,rr:9.5,br:4.5,sr:4.5,cr:23.8,steps:3,active:true,created:"2026-06-02",industry:"Banking",title:"Mixed"},
-  {name:"Bosnia | Insurance ",del:24,opn:3,rep:0,bnc:1,spm:1,dem:1,clk:0,or:12.5,rr:0.0,br:4.0,sr:4.0,cr:0.0,steps:2,active:true,created:"2026-05-26",industry:"Banking",title:"Mixed"},
-  {name:"Retail | Montenegro",del:11,opn:4,rep:2,bnc:2,spm:1,dem:0,clk:0,or:36.4,rr:18.2,br:15.4,sr:7.7,cr:0.0,steps:3,active:true,created:"2026-05-19",industry:"Retail",title:"Mixed"},
-  {name:"DIS Leads 2025 | Follow up | 19.05",del:12,opn:8,rep:0,bnc:0,spm:0,dem:0,clk:1,or:66.7,rr:0.0,br:0.0,sr:0.0,cr:8.3,steps:2,active:true,created:"2026-05-19",industry:"Other",title:"Mixed"},
-  {name:"Saw the demo | DIS 2026",del:2,opn:2,rep:0,bnc:0,spm:0,dem:0,clk:1,or:100.0,rr:0.0,br:0.0,sr:0.0,cr:50.0,steps:3,active:true,created:"2026-05-14",industry:"Other",title:"Mixed"},
-  {name:"Boehringer Follow up",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:0,active:false,created:"2026-05-14",industry:"Other",title:"HR / People"},
-  {name:"Interested | Follow up ",del:4,opn:1,rep:0,bnc:0,spm:0,dem:1,clk:0,or:25.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:2,active:true,created:"2026-05-14",industry:"Other",title:"Mixed"},
-  {name:"Interested | Follow up ",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:0,active:false,created:"2026-05-14",industry:"Other",title:"Mixed"},
-  {name:"Basic Follow up",del:20,opn:9,rep:1,bnc:0,spm:0,dem:0,clk:1,or:45.0,rr:5.0,br:0.0,sr:0.0,cr:5.0,steps:2,active:true,created:"2026-05-14",industry:"Other",title:"Mixed"},
-  {name:"Magnetic Group | MK | Retail",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:0,active:false,created:"2026-04-27",industry:"Retail",title:"Mixed"},
-  {name:"2026 Data Innovation Summit | Attendees",del:447,opn:83,rep:2,bnc:20,spm:2,dem:0,clk:23,or:18.6,rr:0.4,br:4.3,sr:0.4,cr:5.1,steps:2,active:false,created:"2026-04-20",industry:"Other",title:"IT / Tech"},
-  {name:"2026 Data Innovation Summit | Leads 2025",del:52,opn:28,rep:0,bnc:2,spm:1,dem:0,clk:10,or:53.8,rr:0.0,br:3.7,sr:1.9,cr:19.2,steps:3,active:false,created:"2026-04-20",industry:"Other",title:"IT / Tech"},
-  {name:"Retail | Serbia | Decision Layer",del:21,opn:5,rep:1,bnc:0,spm:0,dem:0,clk:0,or:23.8,rr:4.8,br:0.0,sr:0.0,cr:0.0,steps:2,active:true,created:"2026-04-17",industry:"Retail",title:"Mixed"},
-  {name:"Kosovo |  Banks |  100-500",del:32,opn:28,rep:0,bnc:0,spm:0,dem:0,clk:0,or:87.5,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:4,active:true,created:"2026-04-02",industry:"Banking",title:"Mixed"},
-  {name:"Czech Republic Banks | Business Forum | <500 employees",del:28,opn:16,rep:1,bnc:0,spm:0,dem:0,clk:0,or:57.1,rr:3.6,br:0.0,sr:0.0,cr:0.0,steps:3,active:false,created:"2026-03-31",industry:"Banking",title:"Mixed"},
-  {name:"Banking Innovation Forum (2026) Prague",del:55,opn:29,rep:2,bnc:8,spm:0,dem:0,clk:17,or:52.7,rr:3.6,br:12.7,sr:0.0,cr:30.9,steps:3,active:false,created:"2026-03-23",industry:"Banking",title:"Mixed"},
-  {name:"Intent Signals | Insurance",del:646,opn:166,rep:3,bnc:22,spm:19,dem:0,clk:85,or:25.7,rr:0.5,br:3.3,sr:2.8,cr:13.2,steps:3,active:false,created:"2026-03-06",industry:"Insurance",title:"Mixed"},
-  {name:"Intent Signals | Retail",del:427,opn:122,rep:1,bnc:32,spm:25,dem:0,clk:52,or:28.6,rr:0.2,br:7.0,sr:5.4,cr:12.2,steps:3,active:false,created:"2026-03-06",industry:"Retail",title:"Mixed"},
-  {name:"Banking | Intent Signals",del:1036,opn:188,rep:0,bnc:23,spm:17,dem:0,clk:115,or:18.1,rr:0.0,br:2.2,sr:1.6,cr:11.1,steps:4,active:false,created:"2026-03-06",industry:"Banking",title:"Mixed"},
-  {name:"Website Visitors | Basic | Serbia",del:3,opn:1,rep:0,bnc:0,spm:0,dem:0,clk:0,or:33.3,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:3,active:true,created:"2026-03-05",industry:"Other",title:"Mixed"},
-  {name:"Website Visitors | Retail | EN",del:33,opn:6,rep:0,bnc:6,spm:2,dem:0,clk:4,or:18.2,rr:0.0,br:15.4,sr:5.1,cr:12.1,steps:3,active:true,created:"2026-03-05",industry:"Retail",title:"Mixed"},
-  {name:"Website Visitors | Banking | EN",del:2,opn:2,rep:0,bnc:0,spm:0,dem:0,clk:0,or:100.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:3,active:true,created:"2026-03-05",industry:"Banking",title:"Mixed"},
-  {name:"Website Visitors | Basic | EN",del:134,opn:22,rep:0,bnc:5,spm:1,dem:0,clk:16,or:16.4,rr:0.0,br:3.6,sr:0.7,cr:11.9,steps:3,active:true,created:"2026-03-05",industry:"Other",title:"Mixed"},
-  {name:"Slovenia | Banks 03.03",del:47,opn:2,rep:2,bnc:3,spm:0,dem:0,clk:0,or:4.3,rr:4.3,br:6.0,sr:0.0,cr:0.0,steps:2,active:true,created:"2026-03-03",industry:"Banking",title:"Mixed"},
-  {name:"Montenegro | Insurance",del:11,opn:3,rep:1,bnc:1,spm:0,dem:0,clk:0,or:27.3,rr:9.1,br:8.3,sr:0.0,cr:0.0,steps:4,active:true,created:"2026-02-26",industry:"Insurance",title:"Mixed"},
-  {name:"Insurance | Serbia",del:18,opn:7,rep:0,bnc:5,spm:5,dem:1,clk:3,or:38.9,rr:0.0,br:21.7,sr:21.7,cr:16.7,steps:4,active:true,created:"2026-02-25",industry:"Insurance",title:"Mixed"},
-  {name:"Bulgaria | Banks",del:14,opn:1,rep:1,bnc:10,spm:3,dem:0,clk:1,or:7.1,rr:7.1,br:41.7,sr:12.5,cr:7.1,steps:3,active:true,created:"2026-02-23",industry:"Banking",title:"Mixed"},
-  {name:"Bosnia | Retail",del:12,opn:11,rep:1,bnc:2,spm:0,dem:0,clk:0,or:91.7,rr:8.3,br:14.3,sr:0.0,cr:0.0,steps:3,active:true,created:"2026-02-20",industry:"Banking",title:"Mixed"},
-  {name:"Retail | Serbia | 50-500",del:45,opn:20,rep:5,bnc:9,spm:8,dem:3,clk:5,or:44.4,rr:11.1,br:16.7,sr:14.8,cr:11.1,steps:3,active:true,created:"2026-02-12",industry:"Retail",title:"Mixed"},
-  {name:"Albania - Banks ",del:28,opn:10,rep:1,bnc:0,spm:0,dem:0,clk:0,or:35.7,rr:3.6,br:0.0,sr:0.0,cr:0.0,steps:3,active:true,created:"2026-02-03",industry:"Banking",title:"Mixed"},
-  {name:"Bosnia | Banks",del:43,opn:24,rep:5,bnc:5,spm:1,dem:2,clk:4,or:55.8,rr:11.6,br:10.4,sr:2.1,cr:9.3,steps:5,active:true,created:"2026-02-02",industry:"Banking",title:"Mixed"},
-  {name:"Croatia | Banking | 1-200",del:40,opn:16,rep:5,bnc:2,spm:0,dem:0,clk:6,or:40.0,rr:12.5,br:4.8,sr:0.0,cr:15.0,steps:4,active:true,created:"2026-01-28",industry:"Banking",title:"Mixed"},
-  {name:"Montenegro | Banking | 1-200",del:45,opn:23,rep:3,bnc:7,spm:3,dem:3,clk:10,or:51.1,rr:6.7,br:13.5,sr:5.8,cr:22.2,steps:3,active:true,created:"2026-01-27",industry:"Banking",title:"Mixed"},
-  {name:"Serbia | Banking | 1-200",del:45,opn:9,rep:5,bnc:19,spm:2,dem:3,clk:3,or:20.0,rr:11.1,br:29.7,sr:3.1,cr:6.7,steps:5,active:true,created:"2026-01-16",industry:"Banking",title:"Mixed"},
-  {name:"After NYE - C-Suite Roles | Diners like",del:553,opn:143,rep:5,bnc:57,spm:26,dem:0,clk:35,or:25.9,rr:0.9,br:9.3,sr:4.3,cr:6.3,steps:3,active:false,created:"2026-01-08",industry:"C-Suite / Diners",title:"C-Suite"},
-  {name:"NYE 2025",del:107,opn:41,rep:7,bnc:4,spm:1,dem:0,clk:5,or:38.3,rr:6.5,br:3.6,sr:0.9,cr:4.7,steps:1,active:false,created:"2025-12-24",industry:"C-Suite / Diners",title:"Mixed"},
-  {name:"Data roles | Diners like",del:23,opn:10,rep:0,bnc:0,spm:0,dem:0,clk:9,or:43.5,rr:0.0,br:0.0,sr:0.0,cr:39.1,steps:3,active:false,created:"2025-12-04",industry:"C-Suite / Diners",title:"Data / Analytics"},
-  {name:"CMO | Diners like",del:0,opn:0,rep:0,bnc:0,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:0,active:false,created:"2025-12-04",industry:"C-Suite / Diners",title:"CMO / Marketing"},
-  {name:"CEO, COO, CDO, COO, MP,MD, DT | Diners like",del:91,opn:47,rep:0,bnc:4,spm:2,dem:0,clk:21,or:51.6,rr:0.0,br:4.2,sr:2.1,cr:23.1,steps:5,active:false,created:"2025-12-04",industry:"C-Suite / Diners",title:"C-Suite"},
-  {name:"Data 2030 Leads | 11.2025",del:24,opn:10,rep:1,bnc:1,spm:0,dem:1,clk:3,or:41.7,rr:4.2,br:4.0,sr:0.0,cr:12.5,steps:2,active:false,created:"2025-11-13",industry:"Other",title:"Data / Analytics"},
-  {name:"Ageas | C-suite | Portugal",del:10,opn:0,rep:0,bnc:1,spm:0,dem:0,clk:0,or:0.0,rr:0.0,br:9.1,sr:0.0,cr:0.0,steps:2,active:false,created:"2025-10-08",industry:"C-Suite / Diners",title:"C-Suite"},
-  {name:"Website Visitors | EN",del:281,opn:34,rep:1,bnc:22,spm:15,dem:0,clk:26,or:12.1,rr:0.4,br:7.3,sr:5.0,cr:9.3,steps:5,active:true,created:"2025-09-26",industry:"Other",title:"Mixed"},
-  {name:"Data 2030 | DIS May Attendees",del:117,opn:14,rep:1,bnc:6,spm:1,dem:0,clk:12,or:12.0,rr:0.9,br:4.9,sr:0.8,cr:10.3,steps:3,active:false,created:"2025-09-15",industry:"Other",title:"Data / Analytics"},
-  {name:"Diners like | 1-200 | C-suite roles | Europe",del:332,opn:19,rep:1,bnc:8,spm:3,dem:1,clk:3,or:5.7,rr:0.3,br:2.4,sr:0.9,cr:0.9,steps:3,active:false,created:"2025-08-20",industry:"C-Suite / Diners",title:"C-Suite"},
-  {name:"Pharmacies | 1-200 | EU",del:430,opn:92,rep:13,bnc:30,spm:16,dem:2,clk:47,or:21.4,rr:3.0,br:6.5,sr:3.5,cr:10.9,steps:5,active:false,created:"2025-08-11",industry:"Pharmacies",title:"Mixed"},
-  {name:"Oil companies",del:19,opn:2,rep:1,bnc:0,spm:0,dem:1,clk:2,or:10.5,rr:5.3,br:0.0,sr:0.0,cr:10.5,steps:4,active:false,created:"2025-08-01",industry:"Other",title:"Mixed"},
-  {name:"Finansiski drushtva | MK",del:10,opn:3,rep:2,bnc:2,spm:0,dem:3,clk:0,or:30.0,rr:20.0,br:16.7,sr:0.0,cr:0.0,steps:6,active:false,created:"2025-07-28",industry:"Banking",title:"Mixed"},
-  {name:"Partnership Opportunity | DM like companies",del:2789,opn:183,rep:20,bnc:34,spm:11,dem:7,clk:75,or:6.6,rr:0.7,br:1.2,sr:0.4,cr:2.7,steps:4,active:false,created:"2025-07-15",industry:"Partnership",title:"Founders"},
-  {name:"Hiring - Macedonia | Slovenia | Austria | Hungary | EU",del:35,opn:5,rep:2,bnc:2,spm:0,dem:0,clk:1,or:14.3,rr:5.7,br:5.4,sr:0.0,cr:2.9,steps:4,active:false,created:"2025-07-14",industry:"Banking",title:"HR / People"},
-  {name:"EU Remote ",del:20,opn:2,rep:1,bnc:0,spm:0,dem:0,clk:1,or:10.0,rr:5.0,br:0.0,sr:0.0,cr:5.0,steps:4,active:false,created:"2025-07-10",industry:"Other",title:"Mixed"},
-  {name:"Outsourcing companies | Europe",del:349,opn:28,rep:7,bnc:32,spm:10,dem:0,clk:10,or:8.0,rr:2.0,br:8.4,sr:2.6,cr:2.9,steps:4,active:false,created:"2025-06-18",industry:"Other",title:"IT / Tech"},
-  {name:"NE | Outsourcing | IT | Founder & Data Roles",del:287,opn:7,rep:0,bnc:5,spm:2,dem:0,clk:4,or:2.4,rr:0.0,br:1.7,sr:0.7,cr:1.4,steps:5,active:false,created:"2025-06-17",industry:"Other",title:"Founders"},
-  {name:"Insurance | Buying Intent",del:237,opn:14,rep:0,bnc:15,spm:7,dem:0,clk:10,or:5.9,rr:0.0,br:6.0,sr:2.8,cr:4.2,steps:4,active:false,created:"2025-05-30",industry:"Insurance",title:"Mixed"},
-  {name:"Retail |Buying Intent",del:97,opn:1,rep:0,bnc:0,spm:0,dem:0,clk:0,or:1.0,rr:0.0,br:0.0,sr:0.0,cr:0.0,steps:4,active:false,created:"2025-05-30",industry:"Retail",title:"Mixed"},
-  {name:"Financial | Buying Intent",del:152,opn:4,rep:0,bnc:3,spm:1,dem:0,clk:1,or:2.6,rr:0.0,br:1.9,sr:0.6,cr:0.7,steps:4,active:false,created:"2025-05-30",industry:"Banking",title:"Mixed"},
-  {name:"Logistics Approach | Buying Intent",del:113,opn:5,rep:0,bnc:1,spm:0,dem:0,clk:4,or:4.4,rr:0.0,br:0.9,sr:0.0,cr:3.5,steps:4,active:false,created:"2025-05-30",industry:"Other",title:"Mixed"},
-  {name:"Telco | Buying Intent",del:288,opn:24,rep:1,bnc:22,spm:9,dem:0,clk:14,or:8.3,rr:0.3,br:7.1,sr:2.9,cr:4.9,steps:4,active:false,created:"2025-05-30",industry:"Other",title:"Mixed"},
-  {name:"Banking Approach | Buying Intent",del:475,opn:88,rep:8,bnc:11,spm:1,dem:0,clk:58,or:18.5,rr:1.7,br:2.3,sr:0.2,cr:12.2,steps:4,active:false,created:"2025-05-30",industry:"Banking",title:"Mixed"},
-  {name:"General Approach | Buying Intent",del:263,opn:23,rep:1,bnc:17,spm:7,dem:0,clk:10,or:8.7,rr:0.4,br:6.1,sr:2.5,cr:3.8,steps:4,active:false,created:"2025-05-28",industry:"Other",title:"Mixed"},
-  {name:"Retail Serbia 2",del:41,opn:1,rep:1,bnc:9,spm:7,dem:0,clk:0,or:2.4,rr:2.4,br:18.0,sr:14.0,cr:0.0,steps:4,active:false,created:"2025-05-22",industry:"Retail",title:"Mixed"},
-  {name:"Igor | Partnership Approach | DIS",del:10,opn:2,rep:2,bnc:1,spm:0,dem:0,clk:0,or:20.0,rr:20.0,br:9.1,sr:0.0,cr:0.0,steps:1,active:false,created:"2025-05-14",industry:"Partnership",title:"Mixed"},
-  {name:"DIS 2025",del:66,opn:22,rep:2,bnc:1,spm:0,dem:2,clk:6,or:33.3,rr:3.0,br:1.5,sr:0.0,cr:9.1,steps:4,active:false,created:"2025-04-28",industry:"Partnership",title:"Mixed"},
-  {name:"Data Innovation Summit | Linkedin Outreach",del:47,opn:18,rep:3,bnc:1,spm:0,dem:5,clk:6,or:38.3,rr:6.4,br:2.1,sr:0.0,cr:12.8,steps:3,active:false,created:"2025-04-09",industry:"Other",title:"IT / Tech"},
-  {name:"Data Innovation Summit | Profile View",del:17,opn:6,rep:3,bnc:2,spm:0,dem:0,clk:1,or:35.3,rr:17.6,br:10.5,sr:0.0,cr:5.9,steps:3,active:false,created:"2025-04-08",industry:"Other",title:"IT / Tech"},
-  {name:"HR Approach",del:425,opn:120,rep:7,bnc:19,spm:2,dem:2,clk:89,or:28.2,rr:1.6,br:4.3,sr:0.5,cr:20.9,steps:5,active:false,created:"2025-04-07",industry:"Other",title:"HR / People"},
-  {name:"Data Roles Approach",del:667,opn:102,rep:2,bnc:24,spm:8,dem:0,clk:17,or:15.3,rr:0.3,br:3.5,sr:1.2,cr:2.5,steps:5,active:false,created:"2025-04-07",industry:"Other",title:"Data / Analytics"},
-  {name:"Founders Approach",del:413,opn:53,rep:8,bnc:13,spm:4,dem:1,clk:13,or:12.8,rr:1.9,br:3.1,sr:0.9,cr:3.1,steps:5,active:false,created:"2025-04-07",industry:"Other",title:"Founders"}
-];
+fetch('data.json?v='+Date.now()).then(r=>r.json()).then(d=>{DATA=d;init();})
+  .catch(e=>{$('root').innerHTML='<div class="loading">Could not load data.json<br><small>'+esc(e.message)+'</small></div>';});
 
-const ICOL = {
-  'Banking':'#3b82f6','Insurance':'#a855f7','Retail':'#14b8a6',
-  'Tech':'#f97316','Other':'#475569','Event':'#eab308',
-  'Intent/Web':'#22c55e','Healthcare':'#f43f5e','Telco':'#8b5cf6',
-  'Investment':'#06b6d4','Startup':'#ec4899'
-};
-const RCOL = {
-  'Serbia':'#c0504a','Bosnia':'#d08040','Croatia':'#5090c8',
-  'Slovenia':'#48a870','Montenegro':'#b870c0','N. Macedonia':'#c8a030',
-  'Nordics':'#4080d0','DACH/CEE':'#608890','Kosovo':'#d06848',
-  'SEE/Other':'#587070','EU/Global':'#7070c0','UK/IE':'#909030',
-  'Bulgaria':'#a05080','Romania':'#70a040','Albania':'#c07060',
-  'Baltics':'#5098b0','Greece':'#b09840','Benelux':'#6088b0',
-  'Moldova':'#a06870','Czechia':'#608870'
-};
-
-let period = 'all', sortCol = 'created', sortAsc = false;
-let filterRegion = '', filterIndustry = '', filterStatus = '';
-let barChart = null, donutChart = null;
-
-function getSeqs() {
-  if (period === 'mtd') return SEQ.filter(s => s.active);
-  if (period === 'ytd') return SEQ.filter(s => s.created >= '2026-01-01');
-  return SEQ;
-}
-
-function setPeriod(p, btn) {
-  period = p;
-  document.querySelectorAll('.ptab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const tag = { all:'All Time', ytd:'YTD 2026', mtd:'Current Month · Sept 2026' };
-  document.getElementById('chartTag').textContent = tag[p];
-  document.getElementById('donutTag').textContent = tag[p];
-  renderAll();
-}
-
-function renderAll() {
-  const seqs = getSeqs();
-  document.getElementById('periodInfo').textContent = `${seqs.length} sequences shown`;
-  renderKPIs(seqs);
-  renderBar(seqs);
-  renderDonut(seqs);
-  renderBreakdowns(seqs);
-  populateFilters(seqs);
-  renderTable();
-}
-
-function setText(id, v) { const e = document.getElementById(id); if (e) e.textContent = v; }
-function setTag(id, txt, cls) { const e = document.getElementById(id); if (e) { e.textContent = txt; e.className = 'kpi-tag ' + cls; } }
-
-function renderKPIs(seqs) {
-  const act = seqs.filter(s => s.active).length;
-  if (period === 'mtd') {
-    setText('v-del', MTD.del.toLocaleString());
-    setText('s-del', `${seqs.length} sequences · ${act} active`);
-    setTag('t-del', 'September 2026', 'tn');
-    const or = (MTD.opn / MTD.del * 100).toFixed(1);
-    setText('v-opn', MTD.opn.toLocaleString());
-    setText('s-opn', `${or}% open rate`);
-    setTag('t-opn', or >= 14 ? '↑ On track' : '↑ Building', 'tg');
-    const cr = (MTD.clk / MTD.del * 100).toFixed(1);
-    setText('v-clk', MTD.clk.toLocaleString());
-    setText('s-clk', `${cr}% click rate`);
-    setTag('t-clk', 'Intent signal', 'tn');
-    setText('v-rep', TOTALS.demos_mtd > 1 ? MTD.rep.toLocaleString() : MTD.rep.toLocaleString());
-    setText('s-rep', `${(MTD.rep/MTD.del*100).toFixed(2)}% reply rate · Apollo tracked`);
-    setTag('t-rep', '+ LinkedIn replies', 'tw');
-    setText('v-dem', TOTALS.demos_mtd);
-    setText('s-dem', 'Current Month · September 2026');
-    setTag('t-dem', 'Pipeline', 'tn');
-  } else if (period === 'ytd') {
-    setText('v-del', '—');
-    setText('s-del', `${seqs.length} sequences launched 2026`);
-    setTag('t-del', 'YTD 2026', 'tn');
-    setText('v-opn', '—'); setText('s-opn', 'See Apollo Analytics'); setTag('t-opn', 'YTD', 'tn');
-    setText('v-clk', '—'); setText('s-clk', 'See Apollo Analytics'); setTag('t-clk', 'YTD', 'tn');
-    setText('v-rep', TOTALS.replies_ytd); setText('s-rep', 'All channels · 2026'); setTag('t-rep', '↑ Growing', 'tg');
-    setText('v-dem', TOTALS.demos_ytd); setText('s-dem', 'LinkedIn · Events · Apollo · Smartlead'); setTag('t-dem', 'Pipeline', 'tn');
-  } else {
-    setText('v-del', '—');
-    setText('s-del', `${seqs.length} total sequences · ${act} active`);
-    setTag('t-del', 'All sequences', 'tn');
-    setText('v-opn', '—'); setText('s-opn', 'See Apollo Analytics'); setTag('t-opn', 'All Time', 'tn');
-    setText('v-clk', '—'); setText('s-clk', 'See Apollo Analytics'); setTag('t-clk', 'All Time', 'tn');
-    setText('v-rep', TOTALS.replies_alltime); setText('s-rep', 'All channels · all time'); setTag('t-rep', '↑ Growing', 'tg');
-    setText('v-dem', TOTALS.demos_alltime); setText('s-dem', 'LinkedIn · Events · Apollo · Smartlead'); setTag('t-dem', 'All Time', 'tn');
-  }
-}
-
-function renderBar(seqs) {
-  const counts = {};
-  seqs.forEach(s => { counts[s.region] = (counts[s.region] || 0) + 1; });
-  const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,12);
-  const lbls = sorted.map(x => x[0]);
-  const vals = sorted.map(x => x[1]);
-  const cols = lbls.map(r => RCOL[r] || '#475569');
-  if (barChart) { barChart.destroy(); barChart = null; }
-  barChart = new Chart(document.getElementById('barChart').getContext('2d'), {
-    type: 'bar',
-    data: { labels: lbls, datasets: [{ label:'Sequences', data:vals, backgroundColor:cols.map(c=>c+'99'), borderColor:cols, borderWidth:1.5, borderRadius:5 }] },
-    options: { responsive:true, plugins:{ legend:{ display:false }, tooltip:{ backgroundColor:'#262626', borderColor:'#444440', borderWidth:1, titleColor:'#d4d0cc', bodyColor:'#9c9890' } },
-      scales:{ x:{ ticks:{ color:'#585450', font:{ size:10, family:'Open Sans' }, maxRotation:35 }, grid:{ color:'#40403820' } }, y:{ ticks:{ color:'#585450', font:{ size:11, family:'Open Sans' }, stepSize:1 }, grid:{ color:'#40403820' } } } }
+function init(){
+  $('updated').textContent=DATA.generated_date||DATA.generated||'—';
+  document.querySelectorAll('#tabs button').forEach(b=>{
+    b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');render(b.dataset.tab);};
   });
+  render('overview');
 }
 
-function renderDonut(seqs) {
-  const counts = {};
-  seqs.forEach(s => { counts[s.industry] = (counts[s.industry] || 0) + 1; });
-  const order = ['Banking','Retail','Tech','Insurance','Other','Event','Intent/Web','Healthcare','Telco','Investment','Startup'];
-  const lbls = order.filter(k => counts[k]);
-  const vals = lbls.map(k => counts[k]);
-  const cols = lbls.map(k => ICOL[k] || '#475569');
-  const total = vals.reduce((a,b)=>a+b,0);
-  if (donutChart) { donutChart.destroy(); donutChart = null; }
-  donutChart = new Chart(document.getElementById('donutChart').getContext('2d'), {
-    type:'doughnut',
-    data:{ labels:lbls, datasets:[{ data:vals, backgroundColor:cols.map(c=>c+'cc'), borderColor:cols, borderWidth:2, hoverOffset:8 }] },
-    options:{ responsive:false, cutout:'62%', plugins:{ legend:{ display:false }, tooltip:{ backgroundColor:'#262626', borderColor:'#444440', borderWidth:1, titleColor:'#d4d0cc', bodyColor:'#9c9890', callbacks:{ label:ctx=>` ${ctx.label}: ${ctx.parsed} (${((ctx.parsed/total)*100).toFixed(1)}%)` } } } }
+function render(tab){
+  const r=$('root');
+  if(tab==='overview') r.innerHTML=overviewHTML();
+  else if(tab==='sequences') r.innerHTML=seqHTML();
+  else if(tab==='steps') r.innerHTML=stepsHTML();
+  else if(tab==='insights') r.innerHTML=insightsHTML();
+  r.innerHTML+=footerHTML();
+  if(tab==='overview') drawOverview();
+  if(tab==='steps') drawSteps();
+  if(tab==='insights') drawInsights();
+  if(tab==='sequences') wireFilters();
+}
+
+/* ---------- OVERVIEW ---------- */
+function kpiData(){
+  const t=DATA.totals, k=DATA.kpis;
+  if(period==='sep') return {sent:k.sep.sent,del:k.sep.delivered,opn:k.sep.opened,clk:k.sep.clicked,rep:k.sep.replied,dem:t.demos_mtd,label:'September 2026'};
+  if(period==='oct') return {sent:k.oct.sent,del:k.oct.delivered,opn:k.oct.opened,clk:k.oct.clicked,rep:k.oct.replied,dem:0,label:'October 2026 (MTD)'};
+  return {sent:k.ytd.sent,del:k.ytd.delivered,opn:k.ytd.opened,clk:k.ytd.clicked,rep:k.ytd.replied,dem:t.demos_ytd,label:'Year to date 2026'};
+}
+function overviewHTML(){
+  const c=DATA.counts;
+  const k=kpiData();
+  return `
+  <div class="ptoggle" id="pt">
+    <button data-p="ytd" class="${period==='ytd'?'on':''}">Year to date</button>
+    <button data-p="sep" class="${period==='sep'?'on':''}">September</button>
+    <button data-p="oct" class="${period==='oct'?'on':''}">October (MTD)</button>
+  </div>
+  <div class="kpis">
+    <div class="kpi accent"><div class="lbl">Emails Sent</div><div class="val">${n(k.sent)}</div><div class="sub">${k.label}</div></div>
+    <div class="kpi"><div class="lbl">Delivered</div><div class="val">${n(k.del)}</div><div class="sub">${pct(k.del,k.sent)} of sent</div></div>
+    <div class="kpi"><div class="lbl">Opened</div><div class="val">${n(k.opn)}</div><div class="sub">${pct(k.opn,k.del)} open rate</div></div>
+    <div class="kpi"><div class="lbl">Clicked</div><div class="val">${n(k.clk)}</div><div class="sub">${pct(k.clk,k.del)} click rate</div></div>
+    <div class="kpi"><div class="lbl">Replied</div><div class="val">${n(k.rep)}</div><div class="sub">${pct(k.rep,k.del)} reply rate</div></div>
+    <div class="kpi good"><div class="lbl">Demos Booked</div><div class="val">${n(k.dem)}</div><div class="sub">${period==='ytd'?DATA.totals.demos_alltime+' all-time':'this period'}</div></div>
+  </div>
+
+  <div class="grid3">
+    <div class="kpi"><div class="lbl">Total Sequences</div><div class="val">${c.sequences}</div><div class="sub">in Apollo</div></div>
+    <div class="kpi"><div class="lbl">Active Now</div><div class="val" style="color:var(--good)">${c.active}</div><div class="sub">running this month</div></div>
+    <div class="kpi"><div class="lbl">Paused</div><div class="val" style="color:var(--muted)">${c.paused}</div><div class="sub">idle / finished</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel"><h3>Monthly Activity</h3><p class="ph-sub">Emails sent and opened across 2026</p><div class="chartbox"><canvas id="cTrend"></canvas></div></div>
+    <div class="panel"><h3>Replies by Month</h3><p class="ph-sub">Positive engagement trend</p><div class="chartbox"><canvas id="cReplies"></canvas></div></div>
+  </div>
+  <div class="grid2">
+    <div class="panel"><h3>Sequences by Region</h3><p class="ph-sub">Portfolio coverage across markets</p><div class="chartbox"><canvas id="cRegion"></canvas></div></div>
+    <div class="panel"><h3>Sequences by Industry</h3><p class="ph-sub">Vertical focus of the portfolio</p><div class="chartbox"><canvas id="cIndustry"></canvas></div></div>
+  </div>`;
+}
+function drawOverview(){
+  $('pt').querySelectorAll('button').forEach(b=>b.onclick=()=>{period=b.dataset.p;render('overview');});
+  const grid={color:'rgba(36,48,73,.6)'},tick={color:'#8a96b2',font:{size:11}};
+  const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8a96b2',font:{size:11},boxWidth:12}}},
+    scales:{x:{grid:{display:false},ticks:tick},y:{grid,ticks:tick,beginAtZero:true}}};
+  const t=DATA.trend;
+  new Chart($('cTrend'),{type:'bar',data:{labels:t.map(x=>x.m),
+    datasets:[{label:'Sent',data:t.map(x=>x.sent),backgroundColor:'#5b8def',borderRadius:5},
+      {label:'Opened',data:t.map(x=>x.opened),backgroundColor:'#7c5cff',borderRadius:5}]},options:base});
+  new Chart($('cReplies'),{type:'line',data:{labels:t.map(x=>x.m),
+    datasets:[{label:'Replies',data:t.map(x=>x.replied),borderColor:'#34d399',backgroundColor:'rgba(52,211,153,.15)',fill:true,tension:.35,pointRadius:3}]},
+    options:{...base,plugins:{legend:{display:false}}}});
+  // region + industry from sequences count
+  const agg=(key)=>{const m={};DATA.sequences.forEach(s=>m[s[key]]=(m[s[key]]||0)+1);
+    return Object.entries(m).sort((a,b)=>b[1]-a[1]);};
+  const reg=agg('region');
+  new Chart($('cRegion'),{type:'bar',data:{labels:reg.map(x=>x[0]),
+    datasets:[{label:'Sequences',data:reg.map(x=>x[1]),backgroundColor:'#5b8def',borderRadius:5}]},
+    options:{...base,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid,ticks:tick,beginAtZero:true},y:{grid:{display:false},ticks:tick}}}});
+  const ind=agg('industry');
+  const palette=['#5b8def','#7c5cff','#34d399','#fbbf24','#f87171','#38bdf8','#a78bfa','#fb923c','#4ade80','#e879f9','#94a3b8'];
+  new Chart($('cIndustry'),{type:'doughnut',data:{labels:ind.map(x=>x[0]),
+    datasets:[{data:ind.map(x=>x[1]),backgroundColor:palette,borderColor:'#131a2b',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'right',labels:{color:'#8a96b2',font:{size:11},boxWidth:11,padding:8}}}}});
+}
+
+/* ---------- SEQUENCES ---------- */
+function uniq(key){return [...new Set(DATA.sequences.map(s=>s[key]))].sort();}
+function seqHTML(){
+  const regions=uniq('region'),inds=uniq('industry');
+  return `
+  <div class="note">ℹ️ <span>Every sequence with its current email step, status, and engagement. Click any column header to sort; use the filters to narrow by market, vertical, or status.</span></div>
+  <div class="tablewrap">
+    <div class="filters">
+      <input id="fSearch" placeholder="Search sequence name…" value="${esc(fSearch)}">
+      <select id="fRegion"><option value="">All regions</option>${regions.map(r=>`<option ${fRegion===r?'selected':''}>${esc(r)}</option>`).join('')}</select>
+      <select id="fIndustry"><option value="">All industries</option>${inds.map(r=>`<option ${fIndustry===r?'selected':''}>${esc(r)}</option>`).join('')}</select>
+      <select id="fStatus"><option value="">All statuses</option><option value="active" ${fStatus==='active'?'selected':''}>Active</option><option value="paused" ${fStatus==='paused'?'selected':''}>Paused</option></select>
+      <button class="reset" id="fReset">Reset</button>
+      <span class="count" id="rowCount"></span>
+    </div>
+    <div class="tscroll"><table>
+      <thead><tr>
+        ${th('name','Sequence')}${th('region','Region')}${th('industry','Industry')}
+        ${th('curStep','Current Step')}${th('del','Delivered')}${th('or','Open %')}
+        ${th('rep','Replies')}${th('rr','Reply %')}${th('active','Status')}
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table></div>
+  </div>`;
+}
+function th(col,label){
+  const on=sortCol===col;
+  const arr=on?(sortAsc?'▲':'▼'):'▽';
+  const cls=col==='name'||col==='region'||col==='industry'?'':'num';
+  return `<th class="${cls} ${on?'sorted':''}" data-col="${col}">${label}<span class="arr">${arr}</span></th>`;
+}
+function filteredSeqs(){
+  let rows=DATA.sequences.filter(s=>{
+    if(fRegion&&s.region!==fRegion)return false;
+    if(fIndustry&&s.industry!==fIndustry)return false;
+    if(fStatus==='active'&&!s.active)return false;
+    if(fStatus==='paused'&&s.active)return false;
+    if(fSearch&&!s.name.toLowerCase().includes(fSearch.toLowerCase()))return false;
+    return true;
   });
-  document.getElementById('donutLegend').innerHTML = lbls.map((l,i) => {
-    const pct = ((vals[i]/total)*100).toFixed(0);
-    return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;">
-      <div style="width:10px;height:10px;border-radius:3px;flex-shrink:0;background:${cols[i]}"></div>
-      <div style="font-size:12px;color:#d0ccd8;flex:1;">${l}</div>
-      <div style="font-size:12px;font-weight:700;color:#f0edf5;margin-right:6px;">${pct}%</div>
-      <div style="font-size:11px;color:#908888;width:24px;text-align:right;">${vals[i]}</div>
-    </div>`;
-  }).join('');
-  const dem = period==='mtd' ? TOTALS.demos_mtd : period==='ytd' ? TOTALS.demos_ytd : TOTALS.demos_alltime;
-  const lbl = period==='mtd' ? 'September 2026' : period==='ytd' ? 'Year to Date 2026' : 'All Time';
-  document.getElementById('donutDemos').innerHTML = `<span style="color:#585450;">Demos booked</span> &nbsp;·&nbsp; <span style="font-weight:800;color:#90c0a8;font-size:15px;">${dem}</span> <span style="color:#706c68;">${lbl}</span>`;
-}
-
-let bkSortState = { region:'count', industry:'count' };
-
-function sortBk(dim, metric, btn) {
-  bkSortState[dim] = metric;
-  document.querySelectorAll(`[id^="bk-${dim}-"]`).forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  renderBreakdowns(getSeqs());
-}
-
-function bkHtml(rows, maxVal, metricFn, subFn) {
-  return rows.map(r => {
-    const val = metricFn(r);
-    const w = maxVal ? Math.round(val/maxVal*100) : 0;
-    const col = w>70?'#78a888':w>40?'#7890b0':'#606070';
-    return `<div class="bk-row">
-      <div class="bk-label" title="${r.name}">${r.name}</div>
-      <div class="bk-bar-wrap"><div class="bk-bar" style="width:${w}%;background:${col}"></div></div>
-      <div class="bk-stats"><div class="bk-stat-main" style="color:${col}">${val}</div><div class="bk-stat-sub">${subFn(r)}</div></div>
-    </div>`;
-  }).join('');
-}
-
-function renderBreakdowns(seqs) {
-  // Region breakdown
-  const regMap = {};
-  seqs.forEach(s => {
-    if (!regMap[s.region]) regMap[s.region] = { name:s.region, count:0, active:0 };
-    regMap[s.region].count++;
-    if (s.active) regMap[s.region].active++;
+  rows.sort((a,b)=>{
+    let va=a[sortCol],vb=b[sortCol];
+    if(sortCol==='active'){va=a.active?1:0;vb=b.active?1:0;}
+    if(typeof va==='string'){va=va.toLowerCase();vb=vb.toLowerCase();
+      return sortAsc?va.localeCompare(vb):vb.localeCompare(va);}
+    return sortAsc?va-vb:vb-va;
   });
-  let regRows = Object.values(regMap);
-  if (bkSortState.region === 'active') regRows.sort((a,b) => b.active-a.active);
-  else regRows.sort((a,b) => b.count-a.count);
-  regRows = regRows.slice(0,8);
-  const maxR = Math.max(...regRows.map(r => bkSortState.region==='active' ? r.active : r.count));
-  document.getElementById('bk-region').innerHTML = bkHtml(regRows, maxR,
-    r => bkSortState.region==='active' ? r.active : r.count,
-    r => `${r.active} active · ${r.count} total`);
-
-  // Industry breakdown
-  const indMap = {};
-  seqs.forEach(s => {
-    if (!indMap[s.industry]) indMap[s.industry] = { name:s.industry, count:0, active:0 };
-    indMap[s.industry].count++;
-    if (s.active) indMap[s.industry].active++;
-  });
-  let indRows = Object.values(indMap);
-  if (bkSortState.industry === 'active') indRows.sort((a,b) => b.active-a.active);
-  else indRows.sort((a,b) => b.count-a.count);
-  indRows = indRows.slice(0,8);
-  const maxI = Math.max(...indRows.map(r => bkSortState.industry==='active' ? r.active : r.count));
-  document.getElementById('bk-industry').innerHTML = bkHtml(indRows, maxI,
-    r => bkSortState.industry==='active' ? r.active : r.count,
-    r => `${r.active} active · ${r.count} total`);
-
-  // Recent sequences (last 30 days)
-  const cutoff = new Date(); cutoff.setDate(cutoff.getDate()-30);
-  const recent = seqs.filter(s => new Date(s.created) >= cutoff).sort((a,b) => b.created.localeCompare(a.created)).slice(0,8);
-  const maxRec = recent.length;
-  document.getElementById('bk-recent').innerHTML = recent.length ? recent.map(s => `
-    <div class="bk-row">
-      <div class="bk-label" title="${s.name}">${s.name}</div>
-      <div style="flex-shrink:0;font-size:11px;color:#585450;">${s.created}</div>
-      <div class="bk-stats"><div class="bk-stat-main" style="color:${s.active?'#78a888':'#484450'}">${s.active?'Active':'Paused'}</div><div class="bk-stat-sub">${s.region}</div></div>
-    </div>`).join('') : '<div class="nodata">No sequences in last 30 days</div>';
-
-  // Monthly trend
-  const monthMap = {};
-  seqs.forEach(s => {
-    const m = s.created.slice(0,7);
-    if (!monthMap[m]) monthMap[m] = 0;
-    monthMap[m]++;
-  });
-  const months = Object.keys(monthMap).sort().slice(-8);
-  const maxM = Math.max(...months.map(m => monthMap[m]));
-  document.getElementById('bk-trend').innerHTML = months.reverse().map(m => {
-    const v = monthMap[m];
-    const w = Math.round(v/maxM*100);
-    return `<div class="bk-row">
-      <div class="bk-label">${m}</div>
-      <div class="bk-bar-wrap"><div class="bk-bar" style="width:${w}%;background:#6888a8"></div></div>
-      <div class="bk-stats"><div class="bk-stat-main" style="color:#8aa8c8">${v}</div><div class="bk-stat-sub">sequences</div></div>
-    </div>`;
-  }).join('');
+  return rows;
 }
-
-function populateFilters(seqs) {
-  const regions = [...new Set(seqs.map(s=>s.region))].sort();
-  const industries = [...new Set(seqs.map(s=>s.industry))].sort();
-  const rSel = document.getElementById('f-region');
-  const curR = rSel.value;
-  rSel.innerHTML = '<option value="">All Regions</option>' + regions.map(r=>`<option value="${r}"${r===curR?' selected':''}>${r}</option>`).join('');
-  const iSel = document.getElementById('f-industry');
-  const curI = iSel.value;
-  iSel.innerHTML = '<option value="">All Industries</option>' + industries.map(i=>`<option value="${i}"${i===curI?' selected':''}>${i}</option>`).join('');
-}
-
-function applyFilters() {
-  filterRegion = document.getElementById('f-region').value;
-  filterIndustry = document.getElementById('f-industry').value;
-  filterStatus = document.getElementById('f-status').value;
-  renderTable();
-}
-
-function sortByCol(col) {
-  if (sortCol === col) { sortAsc = !sortAsc; }
-  else { sortCol = col; sortAsc = col === 'name' || col === 'region' || col === 'industry'; }
-  document.querySelectorAll('th').forEach(th => th.classList.remove('sorted'));
-  document.querySelectorAll('[id^="arr-"]').forEach(el => el.textContent = '⇅');
-  const th = document.querySelector(`th[onclick="sortByCol('${col}')"]`);
-  if (th) { th.classList.add('sorted'); }
-  const arr = document.getElementById('arr-'+col);
-  if (arr) arr.textContent = sortAsc ? '↑' : '↓';
-  renderTable();
-}
-
-function renderTable() {
-  let data = getSeqs();
-  if (filterRegion) data = data.filter(s => s.region === filterRegion);
-  if (filterIndustry) data = data.filter(s => s.industry === filterIndustry);
-  if (filterStatus === 'active') data = data.filter(s => s.active);
-  if (filterStatus === 'paused') data = data.filter(s => !s.active);
-
-  // Sort
-  data = [...data].sort((a,b) => {
-    let av = a[sortCol] ?? '', bv = b[sortCol] ?? '';
-    if (typeof av === 'boolean') { av = av?1:0; bv = bv?1:0; }
-    if (typeof av === 'number') return sortAsc ? av-bv : bv-av;
-    return sortAsc ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
-  });
-
-  const active = data.filter(s=>s.active).length;
-  document.getElementById('ttitle').textContent = `Sequences (${data.length} shown · ${active} active)`;
-
-  if (!data.length) {
-    document.getElementById('tbody').innerHTML = '<tr><td colspan="7" class="nodata">No sequences match this filter.</td></tr>';
-    return;
-  }
-
-  document.getElementById('tbody').innerHTML = data.map(s => {
-    const st = s.active ? {l:'Active',c:'pb'} : {l:'Paused',c:'pgr'};
-    const cDate = s.created ? s.created.slice(0,7) : '—';
+function renderRows(){
+  const rows=filteredSeqs();
+  $('rowCount').textContent=`${rows.length} of ${DATA.sequences.length} sequences`;
+  $('tbody').innerHTML=rows.map(s=>{
+    const prog=s.steps>0?Math.round(s.curStep/s.steps*100):0;
+    const stLabel=s.stepStatus==='completed'?'Completed':s.stepStatus==='not_started'?'Not started':
+      s.stepStatus==='paused'?'Paused':`Step ${s.curStep} of ${s.steps}`;
+    const exactMark=s.stepExact?'':'<span class="badge" title="Refreshes with exact per-step counts on the daily run">est</span>';
     return `<tr>
-      <td class="tdn"><span title="${s.name}">${s.name}</span></td>
-      <td style="color:#b0bcc8;font-size:12px;">${s.region}</td>
-      <td style="color:#a8b0a0;font-size:12px;">${s.industry}</td>
-      <td style="color:#3a5070;font-size:12px;">${cDate}</td>
-      <td style="color:#706870;text-align:center;">${s.steps}</td>
-      <td style="color:#c8daf0;font-weight:500;text-align:right;">${s.contacts > 0 ? s.contacts.toLocaleString() : '—'}</td>
-      <td><span class="pill ${st.c}">${st.l}</span></td>
+      <td class="seqname">${esc(s.name)}</td>
+      <td><span class="pill region">${esc(s.region)}</span></td>
+      <td><span class="pill ind">${esc(s.industry)}</span></td>
+      <td><div class="prog"><span class="dot ${s.stepStatus}"></span><div class="progbar"><div class="progfill" style="width:${prog}%"></div></div><span class="progtxt">${stLabel}${exactMark}</span></div></td>
+      <td class="num">${n(s.del)}</td>
+      <td class="num">${s.or?s.or+'%':'—'}</td>
+      <td class="num">${n(s.rep)}</td>
+      <td class="num">${s.rr?s.rr+'%':'—'}</td>
+      <td><span class="pill ${s.active?'active':'paused'}">${s.active?'Active':'Paused'}</span></td>
     </tr>`;
   }).join('');
 }
+function wireFilters(){
+  renderRows();
+  $('fSearch').oninput=e=>{fSearch=e.target.value;renderRows();};
+  $('fRegion').onchange=e=>{fRegion=e.target.value;renderRows();};
+  $('fIndustry').onchange=e=>{fIndustry=e.target.value;renderRows();};
+  $('fStatus').onchange=e=>{fStatus=e.target.value;renderRows();};
+  $('fReset').onclick=()=>{fRegion=fIndustry=fStatus=fSearch='';render('sequences');};
+  document.querySelectorAll('thead th').forEach(th=>{
+    th.onclick=()=>{const c=th.dataset.col;
+      if(sortCol===c)sortAsc=!sortAsc;else{sortCol=c;sortAsc=(c==='name'||c==='region'||c==='industry');}
+      render('sequences');};
+  });
+}
 
-renderAll();
+/* ---------- EMAIL STEPS ---------- */
+function stepsHTML(){
+  const sp=DATA.step_perf;
+  return `
+  <div class="note">ℹ️ <span>How each email step in your sequences performs, aggregated across the whole portfolio. Step 1 is the first touch; later steps are follow-ups. Use this to see where engagement drops and which follow-ups are worth keeping.</span></div>
+  <div class="grid2">
+    <div class="panel"><h3>Open Rate by Step</h3><p class="ph-sub">Where attention fades across the sequence</p><div class="chartbox"><canvas id="cStepOpen"></canvas></div></div>
+    <div class="panel"><h3>Replies by Step</h3><p class="ph-sub">Which touch drives the conversation</p><div class="chartbox"><canvas id="cStepRep"></canvas></div></div>
+  </div>
+  <div class="panel" style="margin-top:16px">
+    <h3>Step Breakdown</h3><p class="ph-sub">Sent · opened · clicked · replied per step</p>
+    ${sp.map(s=>`
+      <div class="steprow">
+        <div class="stepnum">${s.step}</div>
+        <div class="stepmeta"><div class="n">${esc(s.label)}</div>
+          <div class="d">${pct(s.opened,s.sent)} open · ${pct(s.clicked,s.sent)} click · ${pct(s.replied,s.sent)} reply</div></div>
+        <div class="stepbars">
+          <div class="sb"><div class="v">${n(s.sent)}</div><div class="k">Sent</div></div>
+          <div class="sb"><div class="v" style="color:var(--brand2)">${n(s.opened)}</div><div class="k">Opened</div></div>
+          <div class="sb"><div class="v" style="color:var(--warn)">${n(s.clicked)}</div><div class="k">Clicked</div></div>
+          <div class="sb"><div class="v" style="color:var(--good)">${n(s.replied)}</div><div class="k">Replied</div></div>
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+function drawSteps(){
+  const sp=DATA.step_perf;
+  const grid={color:'rgba(36,48,73,.6)'},tick={color:'#8a96b2',font:{size:11}};
+  const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{grid:{display:false},ticks:tick},y:{grid,ticks:tick,beginAtZero:true}}};
+  new Chart($('cStepOpen'),{type:'bar',data:{labels:sp.map(s=>'Step '+s.step),
+    datasets:[{data:sp.map(s=>s.sent?+(s.opened/s.sent*100).toFixed(1):0),backgroundColor:'#7c5cff',borderRadius:6}]},
+    options:{...base,scales:{...base.scales,y:{...base.scales.y,ticks:{...tick,callback:v=>v+'%'}}}}});
+  new Chart($('cStepRep'),{type:'bar',data:{labels:sp.map(s=>'Step '+s.step),
+    datasets:[{data:sp.map(s=>s.replied),backgroundColor:'#34d399',borderRadius:6}]},options:base});
+}
+
+/* ---------- INSIGHTS ---------- */
+function insightsHTML(){
+  const i=DATA.insights;
+  const subj=i.best_subjects.map((s,x)=>irow(x,esc(s.subject),esc(s.seq)+' · '+n(s.sent)+' sent',s.open_rate+'%','open',x===0,true)).join('');
+  const sen=i.best_seniority.map((s,x)=>irow(x,esc(s.name),n(s.sent)+' sent · '+n(s.opened)+' opened',s.replied,'replies',x===0)).join('');
+  const seq=i.best_sequence.map((s,x)=>irow(x,esc(s.name),n(s.del)+' delivered · '+(s.or||0)+'% open',s.rep,'replies',x===0)).join('');
+  const reg=i.best_region.map((s,x)=>irow(x,esc(s.name),n(s.sent)+' sent · '+n(s.replied)+' replies',s.rr+'%','reply rate',x===0,true)).join('');
+  const ind=i.best_industry.map((s,x)=>irow(x,esc(s.name),n(s.sent)+' sent · '+n(s.replied)+' replies',s.rr+'%','reply rate',x===0,true)).join('');
+  return `
+  <div class="note">ℹ️ <span>Your best-performing messaging, audiences, and markets — computed from Apollo engagement data for 2026. Reply rate is the sharpest quality signal; volume shows reach.</span></div>
+
+  <div class="grid2">
+    <div class="insight"><h3>🏆 Best Subject Lines</h3><p class="ih">Highest open rates among sent templates</p><div class="ilist">${subj}</div></div>
+    <div class="insight"><h3>👤 Best Audience (Seniority)</h3><p class="ih">Who replies most — target these titles</p><div class="ilist">${sen}</div></div>
+  </div>
+  <div class="grid2">
+    <div class="insight"><h3>🌍 Best Regions</h3><p class="ih">Markets ranked by reply rate</p><div class="ilist">${reg}</div></div>
+    <div class="insight"><h3>🏢 Best Industries</h3><p class="ih">Verticals ranked by reply rate</p><div class="ilist">${ind}</div></div>
+  </div>
+  <div class="insight"><h3>📈 Top Sequences by Replies</h3><p class="ih">Your highest-converting sequences (20+ delivered)</p><div class="ilist">${seq}</div></div>
+
+  <div class="grid2">
+    <div class="panel"><h3>Reply Rate: Manual vs Automatic</h3><p class="ph-sub">Manual, personalised emails convert far better</p><div class="chartbox sm"><canvas id="cMsgType"></canvas></div></div>
+    <div class="panel"><h3>Pipeline by Contact Stage</h3><p class="ph-sub">Where contacts sit after outreach</p><div class="chartbox sm"><canvas id="cStage"></canvas></div></div>
+  </div>`;
+}
+function irow(idx,title,sub,mv,mk,top,good){
+  return `<div class="irow"><div class="rank ${top?'top':''}">${idx+1}</div>
+    <div class="main"><div class="t">${title}</div><div class="s">${sub}</div></div>
+    <div class="metric ${good?'good':''}"><div class="mv">${mv}</div><div class="mk">${mk}</div></div></div>`;
+}
+function drawInsights(){
+  const i=DATA.insights;
+  const grid={color:'rgba(36,48,73,.6)'},tick={color:'#8a96b2',font:{size:11}};
+  new Chart($('cMsgType'),{type:'bar',data:{labels:i.msg_type.map(x=>x.type),
+    datasets:[{data:i.msg_type.map(x=>x.rr),backgroundColor:['#5b8def','#34d399'],borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:tick},y:{grid,ticks:{...tick,callback:v=>v+'%'},beginAtZero:true}}}});
+  const st=i.contact_stages;
+  new Chart($('cStage'),{type:'bar',data:{labels:st.map(x=>x.stage),
+    datasets:[{label:'Emailed',data:st.map(x=>x.emailed),backgroundColor:'#5b8def',borderRadius:5},
+      {label:'Replied',data:st.map(x=>x.replied),backgroundColor:'#34d399',borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{labels:{color:'#8a96b2',font:{size:11},boxWidth:12}}},
+      scales:{x:{grid,ticks:tick,beginAtZero:true},y:{grid:{display:false},ticks:tick}}}});
+}
+
+function footerHTML(){
+  return `<footer>DataMasters Customer Intelligence Platform · datamasters.co · Apollo.io · ${esc(DATA.generated_date||'')}</footer>`;
+}
 </script>
 </body>
 </html>
